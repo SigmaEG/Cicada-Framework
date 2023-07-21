@@ -24,3 +24,36 @@
 
   Thank you.
 </p>
+
+# How-To-Use
+
+<b>Requires VS2022</b></br>
+
+OR</br>
+
+<b>Change the Platform Toolset (Compiler) in <i><ins><u>Configuration Properties -> Platform Toolset</ins></i> to Visual Studio 2019 (v142)</b>
+
+## Building the Cicada Framework for Implementation
+
+> Clone the Github Repo wherever you wish</br>
+> Load <i><b>Cicada Framework\Cicada Framework.sln</b></i></br>
+> Build <i><b>Debug/x86</b></i>, <i><b>Debug/x64</b></i>, <i><b>Release/x86</b></i>, <i><b>Release/x64</b></i></br>
+
+## Including the Cicada Framework in your Project
+
+> Create an <i><b>Empty C++ Project</b></i></br>
+> Right-Click the <b>Project</b> in Visual Studio and Select <b>"Properties"</b> to enter <i><ins>Configuration Properties</ins></i></br>
+> Ensure the <i><b>Platform Toolset (Compiler)</b></i> is the same as the one used for the <b>Cicada Framework Build</b></br>
+> Go to <i><b>C/C++ -> General</b></i></b> in <i><b>Configuration Properties</b></i></br>
+> Edit <i><b>"Additional Include Directories"</b></i> and include <b>Cicada Framework\include</b> <b>(FOR ALL CONFIGURATIONS AND PLATFORMS)</b></br>
+> Go to <i><b>C/C++ -> Advanced</b></i> in <i><b>Configuration Properties</b></i></br>
+> Change <i><b>"Compile As"</b></i> to <b>"Compile as C Code (/TC)"</b> <b>(FOR ALL CONFIGURATIONS AND PLATFORMS)</b></br>
+> Go to <i><b>Linker -> Input</b></i> in <i><b>Configuration Properties</b></i></br>
+> Edit <i><b>"Additional Dependencies"</b></i> and include <i><b>Cicada Framework\lib\libcic_frmwk_x__.lib</b></i> per <b>Configuration : Platform</b></br>
+> Ensure each <i><b>Configuration : Platform</b></i> has its matching <i><b>libcic_frmwk_x__.lib</b></i> file. (Release .lib files don't have "debug" on the end)</br>
+
+> Use the <i><b>example.c</b></i> file to run an example use case of the <b>Cicada Framework</b>
+
+That's all.
+
+Thank you for using the Cicada Framework!
