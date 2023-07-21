@@ -1,8 +1,5 @@
 # Cicada Framework
-<div>
-  <img src="https://cdn.discordapp.com/attachments/754798036022067353/1131736330418794597/CicadaFramework.png" style="width:256px"/>
-  <img src="https://cdn.discordapp.com/attachments/1121838650393641153/1131973439255740606/CicadaFrameworkIconNG.png" style="width:256px"/>
-</div>
+<img src="https://cdn.discordapp.com/attachments/754798036022067353/1131736330418794597/CicadaFramework.png" style="width:256px"/>
 <p>
   <b>Logo Credits (Git Handle): <i><a href="https://github.com/rowandevving">@rowandevving</a></i></b>
   
