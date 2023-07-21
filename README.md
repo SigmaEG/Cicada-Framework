@@ -56,3 +56,11 @@ That's all.
 Thank you for using the Cicada Framework!
 
 <i><b>If you wish to contribute, please DM me using my handle above.</b></i>
+
+# Contributors
+
+<div>
+  <a href="https://github.com/rowandevving">
+    <img src="https://avatars.githubusercontent.com/u/104677625?v=4" alt="@rowandevving (Cicada Logo)" style="width:64px;"/>
+  </a>
+</div>
