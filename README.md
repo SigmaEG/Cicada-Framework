@@ -51,7 +51,7 @@ Change the <i><b>Platform Toolset (Compiler)</b></i> in <i><b>Configuration Prop
 > Edit <i><b>"Additional Dependencies"</b></i> and include <i><b>Cicada Framework\lib\libcic_frmwk_x__.lib</b></i> per <b>Configuration : Platform</b></br>
 > Ensure each <i><b>Configuration : Platform</b></i> has its matching <i><b>libcic_frmwk_x__.lib</b></i> file. (Release .lib files don't have "debug" on the end)</br>
 
-> Use the <i><b>example.c</b></i> file to run an example use case of the <b>Cicada Framework</b>
+> Clone the <i><b>example</b></i> branch to run an example use case of the <b>Cicada Framework</b>
 
 That's all.
 
