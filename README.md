@@ -42,13 +42,11 @@ Change the <i><b>Platform Toolset (Compiler)</b></i> in <i><b>Configuration Prop
 ## Including the Cicada Framework in your Project
 
 > Create an <i><b>Empty C++ Project</b></i></br>
-> Create a <b>*.c</b> file in <b>Source Files</b></br>
+> Create a <b>*.c</b>/<b>*.cpp</b> file in <b>Source Files</b></br>
 > Right-Click the <b>Project</b> in Visual Studio and Select <b>"Properties"</b> to enter <i><b>Configuration Properties</b></i></br>
 > Ensure the <i><b>Platform Toolset (Compiler)</b></i> is the same as the one used for the <b>Cicada Framework Build</b></br>
 > Go to <i><b>C/C++ -> General</b></i></b> in <i><b>Configuration Properties</b></i></br>
 > Edit <i><b>"Additional Include Directories"</b></i> and include <b>Cicada Framework\include</b> <b>(FOR ALL CONFIGURATIONS AND PLATFORMS)</b></br>
-> Go to <i><b>C/C++ -> Advanced</b></i> in <i><b>Configuration Properties</b></i></br>
-> Change <i><b>"Compile As"</b></i> to <b>"Compile as C Code (/TC)"</b> <b>(FOR ALL CONFIGURATIONS AND PLATFORMS)</b></br>
 > Go to <i><b>Linker -> Input</b></i> in <i><b>Configuration Properties</b></i></br>
 > Edit <i><b>"Additional Dependencies"</b></i> and include <i><b>Cicada Framework\lib\libcic_frmwk_x__.lib</b></i> per <b>Configuration : Platform</b></br>
 > Ensure each <i><b>Configuration : Platform</b></i> has its matching <i><b>libcic_frmwk_x__.lib</b></i> file. (Release .lib files don't have "debug" on the end)</br>
