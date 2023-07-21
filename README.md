@@ -36,7 +36,7 @@ OR</br>
 ## Building the Cicada Framework for Implementation
 
 > Clone the Github Repo wherever you wish</br>
-> Open <i><b>Cicada Framework\Cicada Framework.sln</b></i></br>
+> Open <i><b>Cicada\Cicada Framework.sln</b></i></br>
 > Build <i><b>Debug/x86</b></i>, <i><b>Debug/x64</b></i>, <i><b>Release/x86</b></i>, <i><b>Release/x64</b></i> <b>(Ctrl + B to Build)</b> </br>
 
 ## Including the Cicada Framework in your Project
