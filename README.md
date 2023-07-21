@@ -21,8 +21,6 @@
   </b>
 
   You may contact me on Discord at: <b><i><a href="https://discord.com/users/293110261819375616">@sigmaeg</a></i></b>
-
-  Thank you.
 </p>
 
 # How-To-Use
@@ -56,3 +54,5 @@ Change the <i><b>Platform Toolset (Compiler)</b></i> in <i><b>Configuration Prop
 That's all.
 
 Thank you for using the Cicada Framework!
+
+<i><b>If you wish to contribute, please DM me using my handle above.</b></i>
