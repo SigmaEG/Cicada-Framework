@@ -31,7 +31,7 @@
 
 OR</br>
 
-<b>Change the Platform Toolset (Compiler) in <i><ins><u>Configuration Properties -> Platform Toolset</ins></i> to Visual Studio 2019 (v142)</b>
+<b>Change the Platform Toolset (Compiler) in <i><b>Configuration Properties -> Platform Toolset</b></i> to Visual Studio 2019 (v142)</b>
 
 ## Building the Cicada Framework for Implementation
 
@@ -42,7 +42,7 @@ OR</br>
 ## Including the Cicada Framework in your Project
 
 > Create an <i><b>Empty C++ Project</b></i></br>
-> Right-Click the <b>Project</b> in Visual Studio and Select <b>"Properties"</b> to enter <i><ins>Configuration Properties</ins></i></br>
+> Right-Click the <b>Project</b> in Visual Studio and Select <b>"Properties"</b> to enter <i><b>Configuration Properties</b></i></br>
 > Ensure the <i><b>Platform Toolset (Compiler)</b></i> is the same as the one used for the <b>Cicada Framework Build</b></br>
 > Go to <i><b>C/C++ -> General</b></i></b> in <i><b>Configuration Properties</b></i></br>
 > Edit <i><b>"Additional Include Directories"</b></i> and include <b>Cicada Framework\include</b> <b>(FOR ALL CONFIGURATIONS AND PLATFORMS)</b></br>
