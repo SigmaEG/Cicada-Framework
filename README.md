@@ -1,6 +1,8 @@
 # Cicada Framework
 <img src="https://cdn.discordapp.com/attachments/754798036022067353/1131736330418794597/CicadaFramework.png" style="width:256px"></img>
 <p>
+  <b>Logo Credits (Git Handle): <i><a href="https://github.com/rowandevving">@rowandevving</a></i></b>
+  
   Throughout the foreseeable future, I will be working on this framework. Initially, it's compatibility will lie within the Win32 API, allowing cross-compatibility between different Windows Operating System
   distributions of which are of x86_64 architecture of course.
 
@@ -18,7 +20,7 @@
     </br>
   </b>
 
-  You may contact me on Discord at: <a href="https://discord.com/users/293110261819375616">@sigmaeg</a>
+  You may contact me on Discord at: <b><i><a href="https://discord.com/users/293110261819375616">@sigmaeg</a></i></b>
 
   Thank you.
 </p>
