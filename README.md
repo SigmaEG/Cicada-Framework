@@ -42,6 +42,7 @@ OR</br>
 ## Including the Cicada Framework in your Project
 
 > Create an <i><b>Empty C++ Project</b></i></br>
+> Create a <b>*.c</b> file in <b>Source Files</b></br>
 > Right-Click the <b>Project</b> in Visual Studio and Select <b>"Properties"</b> to enter <i><b>Configuration Properties</b></i></br>
 > Ensure the <i><b>Platform Toolset (Compiler)</b></i> is the same as the one used for the <b>Cicada Framework Build</b></br>
 > Go to <i><b>C/C++ -> General</b></i></b> in <i><b>Configuration Properties</b></i></br>
