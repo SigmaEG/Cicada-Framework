@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
   cic_setWindowTitle(
     &WINDOW,
-    L"REWRITE"
+    L"Cicada Framework"
   );
   cic_windowToCenterScreen(&WINDOW);
   cic_setWidgetShape(
