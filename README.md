@@ -31,7 +31,7 @@
 
 OR</br>
 
-<b>Change the Platform Toolset (Compiler) in <i><b>Configuration Properties -> Platform Toolset</b></i> to Visual Studio 2019 (v142)</b>
+Change the <i><b>Platform Toolset (Compiler)</b></i> in <i><b>Configuration Properties -> Platform Toolset</b></i> to <i><b>Visual Studio 2019 (v142)</b></i>
 
 ## Building the Cicada Framework for Implementation
 
