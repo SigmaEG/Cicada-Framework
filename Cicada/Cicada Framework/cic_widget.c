@@ -1,4 +1,5 @@
 #include "include/cic_widget.h"
+#include "include/cic_group.h"
 
 static LRESULT CALLBACK _WIDGET_PROC(
   HWND _HANDLE,
@@ -57,8 +58,8 @@ static LRESULT CALLBACK _WIDGET_PROC(
 
 cic_widget* cic_createWidget(
   cic_widget* _PARENT,
-  const wchar_t* _TITLE,
-  const wchar_t* _ID,
+  wchar_t* _TITLE,
+  wchar_t* _ID,
   cic_point _POSITION,
   cic_size _SIZE,
   bool _APICALL
@@ -66,8 +67,11 @@ cic_widget* cic_createWidget(
   cic_widget* WIDGET = (cic_widget*)calloc(1, sizeof(struct _WIDGET_STRUCT));
 
   if (WIDGET != NULL) {
+    WIDGET->_PARENT = _PARENT;
+    WIDGET->_BASE_GROUP = cic_createGroup(&WIDGET);
     WIDGET->_POSITION = _POSITION;
     WIDGET->_SIZE = _SIZE;
+    WIDGET->_ID = _ID;
 
     WIDGET->_TEXT_ALIGNMENT = TEXTALIGN_LEFT;
 
@@ -91,7 +95,7 @@ cic_widget* cic_createWidget(
 
     if (_APICALL) {
       WNDCLASSW WIDG_CLASS;
-      ZeroMemory(&WIDG_CLASS, sizeof(WNDCLASSW));
+      SecureZeroMemory(&WIDG_CLASS, sizeof(WNDCLASSW));
       WIDG_CLASS.lpszClassName = _ID;
       WIDG_CLASS.hInstance = GetModuleHandleW(0);
       WIDG_CLASS.hCursor = LoadCursor(0, IDC_ARROW);
@@ -129,6 +133,16 @@ cic_widget* cic_createWidget(
       UpdateWindow(WIDGET->_HANDLE);
     }
 
+    if (_PARENT != NULL) {
+      if (_PARENT->_BASE_GROUP != NULL) {
+        if (cic_addWidgetToGroup(&_PARENT->_BASE_GROUP, &WIDGET) == false) {
+          cic_destroyWidget(&WIDGET);
+
+          return NULL;
+        }
+      }
+    }
+
     return WIDGET;
   }
 
@@ -139,7 +153,7 @@ HWND cic_getWidgetHandle(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_HANDLE;
 
-  return (HWND)0;
+  return (HWND)NULL;
 }
 
 bool cic_toCenterXWidget(
@@ -152,7 +166,7 @@ bool cic_toCenterXWidget(
 
     return SetWindowPos(
       cic_getWidgetHandle(_WIDGET),
-      (HWND)0,
+      (HWND)NULL,
       cic_getWidgetX(_WIDGET), cic_getWidgetY(_WIDGET),
       0, 0,
       SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW
@@ -168,9 +182,9 @@ bool cic_toCenterYWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetPosition(_SELF,
       (cic_point) {
-      cic_getWidgetX(*_SELF),
+        cic_getWidgetX(*_SELF),
         cic_getWidgetCenterY(_SRC)
-    }
+      }
     );
   }
 
@@ -184,9 +198,9 @@ bool cic_toBelowOfWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetPosition(_SELF,
       (cic_point) {
-      cic_getWidgetX(_SRC) + _OFFSET.X,
+        cic_getWidgetX(_SRC) + _OFFSET.X,
         (cic_getWidgetY(_SRC) + cic_getWidgetH(_SRC)) + _OFFSET.Y
-    }
+      }
     );
   }
 
@@ -200,9 +214,9 @@ bool cic_toAboveOfWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetPosition(_SELF,
       (cic_point) {
-      cic_getWidgetX(_SRC) + _OFFSET.X,
+        cic_getWidgetX(_SRC) + _OFFSET.X,
         (cic_getWidgetY(_SRC) - cic_getWidgetH(_SRC)) + _OFFSET.Y
-    }
+      }
     );
   }
 
@@ -216,9 +230,9 @@ bool cic_toRightOfWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetPosition(_SELF,
       (cic_point) {
-      (cic_getWidgetX(_SRC) + cic_getWidgetW(_SRC)) + _OFFSET.X,
+        (cic_getWidgetX(_SRC) + cic_getWidgetW(_SRC)) + _OFFSET.X,
         cic_getWidgetY(_SRC) + _OFFSET.Y
-    }
+      }
     );
   }
 
@@ -232,9 +246,9 @@ bool cic_toLeftOfWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetPosition(_SELF,
       (cic_point) {
-      (cic_getWidgetX(_SRC) - cic_getWidgetW(_SRC)) + _OFFSET.X,
+        (cic_getWidgetX(_SRC) - cic_getWidgetW(_SRC)) + _OFFSET.X,
         cic_getWidgetY(_SRC) + _OFFSET.Y
-    }
+      }
     );
   }
 
@@ -252,9 +266,9 @@ bool cic_toCenterOfParentWidget(
     if (_PARENT != NULL) {
       return cic_setWidgetPosition(_SELF,
         (cic_point) {
-        cic_getWidgetCenterX(_PARENT) + _OFFSET.X,
+          cic_getWidgetCenterX(_PARENT) + _OFFSET.X,
           cic_getWidgetCenterY(_PARENT) + _OFFSET.Y
-      }
+        }
       );
     }
   }
@@ -272,9 +286,9 @@ bool cic_toSizeOfParentWidget(
     if (_PARENT != NULL) {
       return cic_setWidgetSize(_SELF,
         (cic_size) {
-        cic_getWidgetW(_PARENT) + _OFFSET.WIDTH,
+          cic_getWidgetW(_PARENT) + _OFFSET.WIDTH,
           cic_getWidgetH(_PARENT) + _OFFSET.HEIGHT
-      }
+        }
       );
     }
   }
@@ -290,9 +304,9 @@ bool cic_toCenterOfWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetPosition(_SELF,
       (cic_point) {
-      cic_getWidgetCenterX(_SRC) + _OFFSET.X,
+        cic_getWidgetCenterX(_SRC) + _OFFSET.X,
         cic_getWidgetCenterY(_SRC) + _OFFSET.Y
-    }
+      }
     );
   }
 
@@ -306,9 +320,9 @@ bool cic_toSizeOfWidget(
   if (*_SELF != NULL && _SRC != NULL) {
     return cic_setWidgetSize(_SELF,
       (cic_size) {
-      cic_getWidgetW(_SRC) + _OFFSET.WIDTH,
+        cic_getWidgetW(_SRC) + _OFFSET.WIDTH,
         cic_getWidgetH(_SRC) + _OFFSET.HEIGHT
-    }
+      }
     );
   }
 
@@ -325,11 +339,37 @@ bool cic_setWidgetPosition(
 
     return SetWindowPos(
       cic_getWidgetHandle(_WIDGET),
-      (HWND)0,
+      (HWND)NULL,
       cic_getWidgetX(_WIDGET), cic_getWidgetY(_WIDGET),
       0, 0,
       SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW
     );
+  }
+
+  return false;
+}
+bool cic_setWidgetX(
+  cic_widget** _SELF,
+  signed int _X
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetPosition(_SELF, (cic_point) {
+      .X = _X,
+      .Y = cic_getWidgetY(*_SELF)
+    });
+  }
+
+  return false;
+}
+bool cic_setWidgetY(
+  cic_widget** _SELF,
+  signed int _Y
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetPosition(_SELF, (cic_point) {
+      .X = cic_getWidgetX(*_SELF),
+        .Y = _Y
+    });
   }
 
   return false;
@@ -352,6 +392,44 @@ bool cic_setWidgetSize(
   }
 
   return false;
+}
+bool cic_setWidgetWidth(
+  cic_widget** _SELF,
+  signed int _WIDTH
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetSize(_SELF, (cic_size) {
+      .WIDTH = _WIDTH,
+      .HEIGHT = cic_getWidgetH(*_SELF)
+    });
+  }
+
+  return false;
+}
+bool cic_setWidgetHeight(
+  cic_widget** _SELF,
+  signed int _HEIGHT
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetSize(_SELF, (cic_size) {
+      .WIDTH = cic_getWidgetW(*_SELF),
+      .HEIGHT = _HEIGHT
+    });
+  }
+
+  return false;
+}
+bool cic_setWidgetW(
+  cic_widget** _SELF,
+  signed int _WIDTH
+) {
+  return cic_setWidgetWidth(_SELF, _WIDTH);
+}
+bool cic_setWidgetH(
+  cic_widget** _SELF,
+  signed int _HEIGHT
+) {
+  return cic_setWidgetH(_SELF, _HEIGHT);
 }
 bool cic_setWidgetLabel(
   cic_widget** _SELF,
@@ -467,13 +545,12 @@ bool cic_setWidgetLabelFont(
 }
 bool cic_setWidgetFontSize(
   cic_widget** _SELF,
-  int SIZE
+  signed int SIZE
 ) {
   if (*_SELF != NULL) {
-    cic_widget* _WIDGET = *_SELF;
-    _WIDGET->_FONT.FONT_SIZE = SIZE;
+    (*_SELF)->_FONT.FONT_SIZE = SIZE;
 
-    return cic_setWidgetLabelFont(_SELF, _WIDGET->_FONT);
+    return cic_setWidgetLabelFont(_SELF, (*_SELF)->_FONT);
   }
 
   return false;
@@ -483,28 +560,49 @@ bool cic_setWidgetShape(
   cic_region* _REGION
 ) {
   if (*_SELF != NULL) {
-    cic_widget* _WIDGET = *_SELF;
-
     if (_REGION != NULL) {
-      _WIDGET->_STYLE_BEF_SHAPE = (DWORD)GetWindowLongPtr(cic_getWidgetHandle(_WIDGET), GWL_STYLE);
-      _WIDGET->_HAS_SHAPE = 1;
+      (*_SELF)->_STYLE_BEF_SHAPE = (DWORD)GetWindowLongPtr(cic_getWidgetHandle(*_SELF), GWL_STYLE);
+      (*_SELF)->_HAS_SHAPE = true;
 
-      cic_setRegion(&_WIDGET->_SHAPE, cic_getHRGNClone(_REGION));
-      SetWindowLongPtr(cic_getWidgetHandle(_WIDGET), GWL_STYLE, _WIDGET->_STYLE_BEF_SHAPE & ~(WS_OVERLAPPEDWINDOW));
-      SetWindowRgn(cic_getWidgetHandle(_WIDGET), cic_getHRGNClone(_WIDGET->_SHAPE), 1);
+      cic_setRegion(
+        &((*_SELF)->_SHAPE),
+        cic_getHRGNClone(_REGION)
+      );
+      SetWindowLongPtr(
+        cic_getWidgetHandle(*_SELF),
+        GWL_STYLE,
+        (*_SELF)->_STYLE_BEF_SHAPE & ~(WS_OVERLAPPEDWINDOW)
+      );
+      SetWindowRgn(
+        cic_getWidgetHandle(*_SELF),
+        cic_getHRGNClone((*_SELF)->_SHAPE),
+        true
+      );
 
       return true;
     }
 
-    if (_WIDGET->_HAS_SHAPE) {
-      if (_WIDGET->_STYLE_BEF_SHAPE != 0)
-        SetWindowLongPtr(cic_getWidgetHandle(_WIDGET), GWL_STYLE, _WIDGET->_STYLE_BEF_SHAPE);
+    if ((*_SELF)->_HAS_SHAPE) {
+      if ((*_SELF)->_STYLE_BEF_SHAPE != 0) {
+        SetWindowLongPtr(
+          cic_getWidgetHandle(*_SELF),
+          GWL_STYLE,
+          (*_SELF)->_STYLE_BEF_SHAPE
+        );
+      }
     }
 
-    _WIDGET->_STYLE_BEF_SHAPE = 0;
-    _WIDGET->_HAS_SHAPE = 0;
-    cic_setRegion(&_WIDGET->_SHAPE, (HRGN)0);
-    SetWindowRgn(cic_getWidgetHandle(_WIDGET), (HRGN)0, 1);
+    (*_SELF)->_STYLE_BEF_SHAPE = 0;
+    (*_SELF)->_HAS_SHAPE = 0;
+    cic_setRegion(
+      &((*_SELF)->_SHAPE),
+      (HRGN)NULL
+    );
+    SetWindowRgn(
+      cic_getWidgetHandle(*_SELF),
+      (HRGN)NULL,
+      true
+    );
 
     return true;
   }
@@ -514,17 +612,16 @@ bool cic_setWidgetShape(
 
 bool cic_redrawWidget(cic_widget** _SELF) {
   if (*_SELF != NULL) {
-    cic_widget* _WIDGET = *_SELF;
-
     RECT CLT_RECT;
     GetClientRect(
-      cic_getWidgetHandle(_WIDGET),
+      cic_getWidgetHandle(*_SELF),
       &CLT_RECT
     );
 
     return InvalidateRect(
-      cic_getWidgetHandle(_WIDGET),
-      &CLT_RECT, true
+      cic_getWidgetHandle(*_SELF),
+      &CLT_RECT,
+      true
     );
   }
 
@@ -537,13 +634,13 @@ cic_point cic_getWidgetPosition(cic_widget* _SELF) {
 
   return (cic_point) { -1, -1 };
 }
-int cic_getWidgetX(cic_widget* _SELF) {
+signed int cic_getWidgetX(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_POSITION.X;
 
   return -1;
 }
-int cic_getWidgetY(cic_widget* _SELF) {
+signed int cic_getWidgetY(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_POSITION.Y;
 
@@ -556,23 +653,23 @@ cic_size cic_getWidgetSize(cic_widget* _SELF) {
 
   return (cic_size) { -1, -1 };
 }
-int cic_getWidgetWidth(cic_widget* _SELF) {
+signed int cic_getWidgetWidth(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_SIZE.WIDTH;
 
   return -1;
 }
-int cic_getWidgetHeight(cic_widget* _SELF) {
+signed int cic_getWidgetHeight(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_SIZE.HEIGHT;
 
   return -1;
 }
 
-int cic_getWidgetW(cic_widget* _SELF) { return cic_getWidgetWidth(_SELF); };
-int cic_getWidgetH(cic_widget* _SELF) { return cic_getWidgetHeight(_SELF); };
+signed int cic_getWidgetW(cic_widget* _SELF) { return cic_getWidgetWidth(_SELF); };
+signed int cic_getWidgetH(cic_widget* _SELF) { return cic_getWidgetHeight(_SELF); };
 
-int cic_getWidgetMouseWheelDelta(cic_widget* _SELF) {
+signed int cic_getWidgetMouseWheelDelta(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_WHEEL_DELTA;
 
@@ -621,7 +718,7 @@ cic_font cic_getWidgetLabelFont(cic_widget* _SELF) {
 
   return (cic_font) { 0 };
 }
-int cic_getWidgetFontSize(cic_widget* _SELF) {
+signed int cic_getWidgetFontSize(cic_widget* _SELF) {
   if (_SELF != NULL)
     return _SELF->_FONT.FONT_SIZE;
 
@@ -640,15 +737,15 @@ cic_point cic_getWidgetCenter(cic_widget* _SELF) {
   return (cic_point) { -1, -1 };
 }
 
-int cic_getWidgetCenterX(cic_widget* _SELF) {
+signed int cic_getWidgetCenterX(cic_widget* _SELF) {
   if (_SELF != NULL)
-    return cic_getWidgetX(_SELF) + (cic_getWidgetW(_SELF) / 2);
+    return cic_getWidgetCenter(_SELF).X;
 
   return -1;
 }
-int cic_getWidgetCenterY(cic_widget* _SELF) {
+signed int cic_getWidgetCenterY(cic_widget* _SELF) {
   if (_SELF != NULL)
-    return cic_getWidgetY(_SELF) + (cic_getWidgetH(_SELF) / 2);
+    return cic_getWidgetCenter(_SELF).Y;
 
   return -1;
 }
@@ -687,12 +784,7 @@ cic_widgetType cic_getWidgetType(cic_widget* _SELF) {
 
 cic_widget* cic_getWidgetParent(cic_widget* _SELF) {
   if (_SELF != NULL) {
-    return cic_getRefByRawHandle(
-      GetAncestor(
-        cic_getWidgetHandle(_SELF),
-        GA_PARENT
-      )
-    );
+    return _SELF->_PARENT;
   }
 
   return NULL;

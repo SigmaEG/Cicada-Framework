@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-  typedef enum _cic_WIDGET_STYLE_ENUM {
+  typedef enum _CIC_WIDGET_STYLE_ENUM {
     STYLE_BORDER = WS_BORDER,
     STYLE_CAPTION = WS_CAPTION,
     STYLE_CHILD = WS_CHILD,
@@ -45,7 +45,7 @@ extern "C" {
     STYLE_TABSTOP = WS_TABSTOP,
     STYLE_VISIBLE = WS_VISIBLE,
   } cic_widgetStyle;
-  typedef enum _cic_EVENT_ENUM {
+  typedef enum _CIC_EVENT_ENUM {
     EVENT_CREATE,
     EVENT_CLOSE,
     EVENT_KEYDOWN,
@@ -79,7 +79,7 @@ extern "C" {
     EVENT_RESTORE_FROM_MAXIMIZED,
     EVENT_RESTORE_FROM_MINIMIZED
   } cic_event;
-  typedef enum _cic_WIDGET_TYPE_ENUM {
+  typedef enum _CIC_WIDGET_TYPE_ENUM {
     WTYPE_STATIC,
     WTYPE_BROWSER,
     WTYPE_BUTTON,
@@ -99,7 +99,7 @@ extern "C" {
     WTYPE_SLIDER,
     WTYPE_WINDOW
   } cic_widgetType;
-  typedef enum _cic_FONT_WEIGHT_ENUM {
+  typedef enum _CIC_FONT_WEIGHT_ENUM {
     WEIGHT_DEFAULT = FW_DONTCARE,
     WEIGHT_THIN = FW_THIN,
     WEIGHT_EXTRALIGHT = FW_EXTRALIGHT,
@@ -111,7 +111,7 @@ extern "C" {
     WEIGHT_EXTRABOLD = FW_EXTRABOLD,
     WEIGHT_HEAVY = FW_HEAVY,
   } cic_fontWeight;
-  typedef enum _cic_FONT_QUALITY_ENUM {
+  typedef enum _CIC_FONT_QUALITY_ENUM {
     QUALITY_DEFAULT = DEFAULT_QUALITY,
     QUALITY_NON_ANTIALIASED = NONANTIALIASED_QUALITY,
     QUALITY_ANTIALIASED = ANTIALIASED_QUALITY,
@@ -119,7 +119,7 @@ extern "C" {
     QUALITY_DRAFT = DRAFT_QUALITY,
     QUALITY_PROOF = PROOF_QUALITY,
   } cic_fontQuality;
-  typedef enum _cic_CHAR_SET_ENUM {
+  typedef enum _CIC_CHAR_SET_ENUM {
     CHARSET_LOCALE = DEFAULT_CHARSET,
     CHARSET_ANSI = ANSI_CHARSET,
     CHARSET_BALTIC = BALTIC_CHARSET,
@@ -140,7 +140,7 @@ extern "C" {
     CHARSET_HEBREW = HEBREW_CHARSET,
     CHARSET_THAI = THAI_CHARSET,
   } cic_charSet;
-  typedef enum _cic_TEXT_ALIGNMENT_ENUM {
+  typedef enum _CIC_TEXT_ALIGNMENT_ENUM {
     TEXTALIGN_BASELINE = TA_BASELINE,
     TEXTALIGN_BOTTOM = TA_BOTTOM,
     TEXTALIGN_TOP = TA_TOP,
@@ -148,7 +148,7 @@ extern "C" {
     TEXTALIGN_LEFT = TA_LEFT,
     TEXTALIGN_RIGHT = TA_RIGHT,
   } cic_textAlignment;
-  typedef enum _cic_COLOR_DEPTH_ENUM {
+  typedef enum _CIC_COLOR_DEPTH_ENUM {
     // Luminance/Grayscale
     CD_L8,
     // Luminance w/ Alpha Channel
@@ -158,14 +158,14 @@ extern "C" {
     // RGBA888 w/ Alpha Channel
     CD_RGBa8
   } cic_colorDepth;
-  typedef enum _SGTR_COMBINE_MODE_ENUM {
+  typedef enum _CICR_COMBINE_MODE_ENUM {
     CMODE_INTERSECTION = RGN_AND,
     CMODE_COPY = RGN_COPY,
     CMODE_DIFFERENT = RGN_DIFF,
     CMODE_UNION = RGN_OR,
     CMODE_UNION_EXCEPT_OVERLAP = RGN_XOR,
   } cic_rCombineMode;
-  typedef enum _cic_BUTTON_STYLE {
+  typedef enum _CIC_BUTTON_STYLE {
     BSTYLE_BITMAP = BS_BITMAP,
     BSTYLE_THREE_STATE = BS_AUTO3STATE,
     BSTYLE_TEXT_BOTTOM = BS_BOTTOM,
@@ -184,22 +184,22 @@ extern "C" {
     BSTYLE_RADIOBUTTON = BS_AUTORADIOBUTTON,
     BSTYLE_SPLITBUTTON = BS_SPLITBUTTON
   } cic_buttonStyle;
-  typedef struct _cic_POINT_STRUCT {
-    int X;
-    int Y;
+  typedef struct _CIC_POINT_STRUCT {
+    signed int X;
+    signed int Y;
   } cic_point;
-  typedef struct _cic_SIZE_STRUCT {
-    int WIDTH;
-    int HEIGHT;
+  typedef struct _CIC_SIZE_STRUCT {
+    signed int WIDTH;
+    signed int HEIGHT;
   } cic_size;
-  typedef struct _cic_COLOR_STRUCT {
+  typedef struct _CIC_COLOR_STRUCT {
     float RED;
     float GREEN;
     float BLUE;
   } cic_color;
-  typedef struct _cic_FONT_STRUCT {
+  typedef struct _CIC_FONT_STRUCT {
     wchar_t* FONT_NAME;
-    int FONT_SIZE;
+    unsigned int FONT_SIZE;
     int ANGLE;
     cic_fontQuality QUALITY;
     cic_fontWeight WEIGHT;
@@ -210,13 +210,15 @@ extern "C" {
     bool HAS_STRIKEOUT;
     bool RIGHT_TO_LEFT_READ;
   } cic_font;
-  typedef struct _cic_REGION_STRUCT {
+  typedef struct _CIC_REGION_STRUCT {
     HRGN _REGION;
   } cic_region;
 
   typedef struct _EVENT_STRUCT cic_eventStruct;
+  typedef struct _GROUP_STRUCT cic_group;
   typedef struct _WIDGET_STRUCT cic_widget;
   typedef struct _WINDOW_STRUCT cic_window;
+  typedef struct _BUTTON_STRUCT cic_button;
 
   typedef void (*CIC_CALLBACK)(cic_widget** _SELF);
 
@@ -224,12 +226,22 @@ extern "C" {
     cic_event _EVENT_TYPE;
     CIC_CALLBACK _FUNC_REF;
   } cic_eventStruct;
+  typedef struct _GROUP_STRUCT {
+    cic_widget* _BASE;
+
+    cic_widget** _CHILDREN;
+    unsigned int _nCHILDREN;
+
+    bool _CLIP_CHILDREN;
+    bool _RESIZEABLE;
+  } cic_group;
   typedef struct _WIDGET_STRUCT {
-    void* _BASE;
+    cic_group* _BASE_GROUP;
+    cic_group* _PART_GROUP;
     WNDPROC _PREV_PROC;
 
     cic_eventStruct** _EVENTS;
-    size_t _nEVENTS;
+    unsigned int _nEVENTS;
 
     void (*DRAW)(cic_widget** _SELF, HDC _DC, PAINTSTRUCT* _PS);
     void (*HANDLE)(cic_widget** _SELF, cic_event _EVENT);
@@ -239,7 +251,7 @@ extern "C" {
     bool _HAS_SHAPE;
     bool _DESTROYED;
 
-    int _WHEEL_DELTA;
+    signed int _WHEEL_DELTA;
 
     DWORD _STYLE_BEF_SHAPE;
 
@@ -260,6 +272,7 @@ extern "C" {
 
     cic_widgetType _WIDGET_TYPE;
     void* _WIDGET_UPCAST_REF;
+    cic_widget* _PARENT;
   } cic_widget;
   typedef struct _WINDOW_STRUCT {
     cic_widget* _BASE;
@@ -267,6 +280,8 @@ extern "C" {
     bool _FULLSCREEN_MODE;
     bool _MAXIMIZED;
     bool _MINIMIZED;
+
+    HMONITOR _HMONITOR;
 
     cic_size _BFSM_SZ;
     cic_point _BFSM_PT;
@@ -304,7 +319,7 @@ extern "C" {
   cic_region* cic_createRoundRectRegion(
     cic_point _POSITION,
     cic_size _SIZE,
-    int _RADIUS
+    signed int _RADIUS
   );
   cic_region* cic_createEllipticRegion(
     cic_point _POSITION,
@@ -313,34 +328,76 @@ extern "C" {
   cic_region* cic_createPolygonRegion(
     cic_point POINTS[],
     size_t _nPOINTS,
-    int _POLY_MODE
+    signed int _POLY_MODE
   );
 
   void cic_setRegion(cic_region** _REGION, HRGN _HRGN);
 
   HRGN cic_getHRGN(cic_region* _REGION);
   HRGN cic_getHRGNClone(cic_region* _REGION);
-  bool cic_combineRegion(HRGN _DEST_REGION, HRGN _SRC_REGION, cic_rCombineMode _COMBINE_MODE);
+  bool cic_combineRegion(
+    HRGN _DEST_REGION,
+    HRGN _SRC_REGION,
+    cic_rCombineMode _COMBINE_MODE
+  );
 
   bool cic_destroyRegion(cic_region** _REGION);
 
   cic_size cic_rectToSize(RECT _RECT);
+  cic_point cic_rectToPoint(RECT _RECT);
   cic_point cic_pointToPoint(POINT _POINT);
 
   bool cic_lpcwstrToLPWSTR(
-    LPWSTR* _DEST,
-    LPCWSTR _SOURCE
+    wchar_t** _DEST,
+    const wchar_t* _SOURCE
   );
 
   bool cic_setClipboard(const wchar_t* _SOURCE);
   bool cic_getClipboard(wchar_t** _DEST);
 
   bool cic_isKeyDown(
-    int _VK_CODE,
+    signed int _VK_CODE,
     bool _TOGGLE_CHECK
   );
 
-  LPCWSTR SGTWidgetTypeToLPCWSTR(cic_widgetType _TYPE);
+  const wchar_t* cic_widgetTypeToLPCWSTR(cic_widgetType _TYPE);
+
+  unsigned int cic_getNumOfDisplayMonitors();
+  HMONITOR cic_getMonitorByIdx(unsigned int _MONITOR_IDX);
+  HMONITOR cic_getMonitorByWindow(cic_window* _WINDOW);
+  signed int cic_getMonitorIdxByHandle(HMONITOR _HMONITOR);
+
+  cic_size cic_getScreenSizeByWindow(
+    cic_window* _WINDOW,
+    bool _WORKAREA
+  );
+  cic_point cic_getScreenPointByWindow(
+    cic_window* _WINDOW,
+    bool _WORKAREA
+  );
+  cic_point cic_getScreenCenterByWindow(
+    cic_window* _WINDOW,
+    bool _WORKAREA
+  );
+  cic_size cic_getScreenSizeByIdx(
+    unsigned int _MONITOR_IDX,
+    bool _WORKAREA
+  );
+  cic_point cic_getScreenPointByIdx(
+    unsigned int _MONITOR_IDX,
+    bool _WORKAREA
+  );
+  cic_point cic_getScreenCenterByIdx(
+    unsigned int _MONITOR_IDX,
+    bool _WORKAREA
+  );
+
+  cic_point cic_calcCenterPoint(
+    cic_point _CENTER_POINT,
+    cic_size _SIZE_OF_SRC
+  );
+
+  bool cic_exit(signed int _EXIT_CODE);
 
 #ifdef __cplusplus
 }

@@ -24,6 +24,15 @@
     <ClCompile Include="cic_leak_detector.c" />
     <ClCompile Include="cic_widget.c" />
     <ClCompile Include="cic_window.c" />
+    <ClCompile Include="cic_group.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\cic_button.h" />
+    <ClInclude Include="include\cic_globals.h" />
+    <ClInclude Include="include\cic_group.h" />
+    <ClInclude Include="include\cic_leak_detector.h" />
+    <ClInclude Include="include\cic_widget.h" />
+    <ClInclude Include="include\cic_window.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

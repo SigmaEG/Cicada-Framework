@@ -1,7 +1,11 @@
 #include "include/cic_window.h"
 #include "include/cic_widget.h"
 
-static void _WND_DRAW(cic_window* _SELF, HDC _DC, PAINTSTRUCT* _PS) {
+static void _WND_DRAW(
+  cic_window* _SELF,
+  HDC _DC,
+  PAINTSTRUCT* _PS
+) {
   if (_SELF != NULL) {
     cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
 
@@ -47,11 +51,16 @@ static LRESULT CALLBACK _WND_PROC(
       }
     }
 
-    return DefWindowProcW(_HANDLE, _MESSAGE, _WPARAM, _LPARAM);
+    return DefWindowProcW(
+      _HANDLE, 
+      _MESSAGE,
+      _WPARAM,
+      _LPARAM
+    );
   }
 
   cic_widget* _BASE = cic_getRefByRawHandle(_HANDLE);
-
+ 
   if (_BASE != NULL) {
     cic_window* _this = (cic_window*)_BASE->_WIDGET_UPCAST_REF;
 
@@ -82,7 +91,7 @@ static LRESULT CALLBACK _WND_PROC(
         };
 
         case WM_ERASEBKGND: {
-          return NULL;
+          return 0;
         };
         case WM_PAINT: {
           RECT CLT_RECT;
@@ -104,9 +113,9 @@ static LRESULT CALLBACK _WND_PROC(
 
           BitBlt(
             _DC,
-            NULL, NULL,
+            0, 0,
             CLT_RECT.right, CLT_RECT.bottom,
-            _MEM_DC, NULL, NULL,
+            _MEM_DC, 0, 0,
             SRCCOPY
           );
 
@@ -116,7 +125,7 @@ static LRESULT CALLBACK _WND_PROC(
           DeleteObject(_MEM_BMP);
           DeleteDC(_MEM_DC);
 
-          return NULL;
+          return 0;
         };
 
         case WM_KEYDOWN: {
@@ -212,8 +221,13 @@ static LRESULT CALLBACK _WND_PROC(
         }
 
         case (WM_MOVE): {
-          _BASE->_POSITION.X = (INT)LOWORD(_LPARAM);
-          _BASE->_POSITION.Y = (INT)HIWORD(_LPARAM);
+          _this->_HMONITOR = MonitorFromWindow(
+            cic_getWindowHandle(_this),
+            MONITOR_DEFAULTTONEAREST
+          );
+
+          _BASE->_POSITION.X = LOWORD(_LPARAM);
+          _BASE->_POSITION.Y = HIWORD(_LPARAM);
 
           CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_MOVE);
 
@@ -223,8 +237,13 @@ static LRESULT CALLBACK _WND_PROC(
           break;
         };
         case (WM_SIZE): {
-          _BASE->_SIZE.WIDTH = (INT)LOWORD(_LPARAM);
-          _BASE->_SIZE.HEIGHT = (INT)HIWORD(_LPARAM);
+          _this->_HMONITOR = MonitorFromWindow(
+            cic_getWindowHandle(_this),
+            MONITOR_DEFAULTTONEAREST
+          );
+
+          _BASE->_SIZE.WIDTH = LOWORD(_LPARAM);
+          _BASE->_SIZE.HEIGHT = HIWORD(_LPARAM);
 
           CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_RESIZE);
 
@@ -252,7 +271,7 @@ static LRESULT CALLBACK _WND_PROC(
         };
 
         case (WM_ENABLE): {
-          if (_WPARAM == TRUE) {
+          if (_WPARAM) {
             CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_ENABLE);
 
             if (_EVENT_HANDLE != NULL)
@@ -268,7 +287,10 @@ static LRESULT CALLBACK _WND_PROC(
           break;
         };
         case (WM_SHOWWINDOW): {
-          if (_WPARAM == TRUE) {
+          if (_this->_MINIMIZED)
+            _this->_MINIMIZED = false;
+
+          if (_WPARAM) {
             CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_SHOW);
 
             if (_EVENT_HANDLE != NULL)
@@ -343,7 +365,7 @@ static LRESULT CALLBACK _WND_PROC(
           if (_EVENT_HANDLE != NULL)
             _EVENT_HANDLE(&_BASE);
 
-          return NULL;
+          return 0;
         };
         case (SGTM_RESTORE_FS): {
           CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_RESTORE_FROM_FULLSCREEN);
@@ -351,7 +373,7 @@ static LRESULT CALLBACK _WND_PROC(
           if (_EVENT_HANDLE != NULL)
             _EVENT_HANDLE(&_BASE);
 
-          return NULL;
+          return 0;
         };
 
         case (SGTM_MAXIMIZE): {
@@ -360,7 +382,7 @@ static LRESULT CALLBACK _WND_PROC(
           if (_EVENT_HANDLE != NULL)
             _EVENT_HANDLE(&_BASE);
 
-          return NULL;
+          return 0;
         };
         case (SGTM_RESTORE_MXZ): {
           CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_RESTORE_FROM_MAXIMIZED);
@@ -368,7 +390,7 @@ static LRESULT CALLBACK _WND_PROC(
           if (_EVENT_HANDLE != NULL)
             _EVENT_HANDLE(&_BASE);
 
-          return NULL;;
+          return 0;;
         };
 
         case (SGTM_MINIMIZE): {
@@ -377,7 +399,7 @@ static LRESULT CALLBACK _WND_PROC(
           if (_EVENT_HANDLE != NULL)
             _EVENT_HANDLE(&_BASE);
 
-          return NULL;
+          return 0;
         };
         case (SGTM_RESTORE_MIZ): {
           CIC_CALLBACK _EVENT_HANDLE = cic_getEventHandler(_BASE, EVENT_RESTORE_FROM_MINIMIZED);
@@ -385,7 +407,7 @@ static LRESULT CALLBACK _WND_PROC(
           if (_EVENT_HANDLE != NULL)
             _EVENT_HANDLE(&_BASE);
 
-          return NULL;
+          return 0;
         };
       }
     }
@@ -400,8 +422,8 @@ static LRESULT CALLBACK _WND_PROC(
 }
 
 cic_window* cic_createWindow(
-  const wchar_t* _TITLE,
-  const wchar_t* _ID,
+  wchar_t* _TITLE,
+  wchar_t* _ID,
   cic_point _POSITION,
   cic_size _SIZE
 ) {
@@ -412,21 +434,10 @@ cic_window* cic_createWindow(
 
     if (WINDOW->_BASE != NULL) {
       WINDOW->_BASE->_WIDGET_UPCAST_REF = WINDOW;
-
-      WINDOW->_FULLSCREEN_MODE = 0;
-      WINDOW->_MAXIMIZED = 0;
-      WINDOW->_MINIMIZED = 0;
-
-      WINDOW->_BFSM_PT.X = 0;
-      WINDOW->_BFSM_PT.Y = 0;
-
-      WINDOW->_BFSM_SZ.WIDTH = 0;
-      WINDOW->_BFSM_SZ.HEIGHT = 0;
-
       WINDOW->_BFSM_STYLE = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 
       WNDCLASSW WND_CLASS;
-      ZeroMemory(&WND_CLASS, sizeof(WNDCLASSW));
+      SecureZeroMemory(&WND_CLASS, sizeof(WNDCLASSW));
       WND_CLASS.lpszClassName = _ID;
       WND_CLASS.hInstance = GetModuleHandleW(NULL);
       WND_CLASS.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -434,7 +445,7 @@ cic_window* cic_createWindow(
       WND_CLASS.style = CS_HREDRAW | CS_VREDRAW;
       WND_CLASS.lpfnWndProc = _WND_PROC;
 
-      if (RegisterClassW(&WND_CLASS) == NULL) {
+      if (RegisterClassW(&WND_CLASS) == 0) {
         cic_destroyWindow(&WINDOW);
 
         return NULL;
@@ -458,6 +469,11 @@ cic_window* cic_createWindow(
         return NULL;
       }
 
+      WINDOW->_HMONITOR = MonitorFromWindow(
+        cic_getWindowHandle(WINDOW),
+        MONITOR_DEFAULTTONEAREST
+      );
+
       cic_insertRawHandleRef(cic_getWindowWidgetRef(WINDOW));
       cic_showWindow(&WINDOW);
       UpdateWindow(cic_getWindowHandle(WINDOW));
@@ -474,8 +490,8 @@ cic_window* cic_createWindow(
 }
 
 cic_window* cic_createWindowCRT(
-  const wchar_t* _TITLE,
-  const wchar_t* _ID,
+  wchar_t* _TITLE,
+  wchar_t* _ID,
   cic_point _POSITION,
   cic_size _SIZE,
   CIC_CALLBACK _CRT_FUNC_REF
@@ -487,10 +503,12 @@ cic_window* cic_createWindowCRT(
 
     if (WINDOW->_BASE != NULL) {
       WINDOW->_BASE->_WIDGET_UPCAST_REF = WINDOW;
+
+      WINDOW->_BFSM_STYLE = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
       cic_createEventHandler(&WINDOW->_BASE, EVENT_CREATE, _CRT_FUNC_REF);
 
       WNDCLASSW WND_CLASS;
-      ZeroMemory(&WND_CLASS, sizeof(WNDCLASSW));
+      SecureZeroMemory(&WND_CLASS, sizeof(WNDCLASSW));
       WND_CLASS.lpszClassName = _ID;
       WND_CLASS.hInstance = GetModuleHandleW(0);
       WND_CLASS.hCursor = LoadCursor(0, IDC_ARROW);
@@ -522,6 +540,11 @@ cic_window* cic_createWindowCRT(
         return NULL;
       }
 
+      WINDOW->_HMONITOR = MonitorFromWindow(
+        cic_getWindowHandle(WINDOW),
+        MONITOR_DEFAULTTONEAREST
+      );
+
       cic_insertRawHandleRef(cic_getWindowWidgetRef(WINDOW));
       cic_showWindow(&WINDOW);
       UpdateWindow(cic_getWindowHandle(WINDOW));
@@ -537,6 +560,14 @@ cic_window* cic_createWindowCRT(
   return NULL;
 }
 
+cic_widget** cic_getWindowWidgetRef(cic_window* _SELF) {
+  if (_SELF != NULL) {
+    if (_SELF->_BASE != NULL)
+      return &_SELF->_BASE;
+  }
+
+  return NULL;
+}
 HWND cic_getWindowHandle(cic_window* _SELF) {
   if (_SELF != NULL) {
     cic_widget** _WIDGET_REF = cic_getWindowWidgetRef(_SELF);
@@ -551,39 +582,165 @@ HWND cic_getWindowHandle(cic_window* _SELF) {
 
   return (HWND)0;
 }
-cic_widget** cic_getWindowWidgetRef(cic_window* _SELF) {
-  if (_SELF != NULL) {
-    if (_SELF->_BASE != NULL)
-      return &_SELF->_BASE;
+
+signed int cic_startWindowMessageLoop(cic_window** _SELF) {
+  if (*_SELF != NULL) {
+    cic_window* _WINDOW = *_SELF;
+    HWND _HANDLE = cic_getWindowHandle(_WINDOW);
+
+    MSG MESSAGE_STRUCT;
+    bool _BREAK = false;
+
+    for (;;) {
+      while (PeekMessage(
+        &MESSAGE_STRUCT,
+        NULL,
+        0, 0,
+        PM_REMOVE
+      )) {
+        TranslateMessage(&MESSAGE_STRUCT);
+        DispatchMessage(&MESSAGE_STRUCT);
+
+        if (MESSAGE_STRUCT.message == WM_QUIT) {
+          if (_WINDOW != NULL) {
+            if (IsWindow(_HANDLE) && !((*_SELF)->_BASE->_DESTROYED))
+              cic_destroyWindow(&*_SELF);
+          }
+
+          return (signed int)MESSAGE_STRUCT.wParam;
+        }
+      }
+
+      WaitMessage();
+    }
+
+    return (signed int)MESSAGE_STRUCT.wParam;
   }
 
-  return NULL;
+  return -1;
+}
+
+bool cic_setWindowPosition(
+  cic_window** _SELF, 
+  cic_point _POINT
+) {
+  if (*_SELF != NULL) {
+    cic_point _SPOINT = cic_getScreenPointByWindow(*_SELF, true);
+
+    return cic_setWidgetPosition(
+      cic_getWindowWidgetRef(*_SELF),
+      (cic_point) {
+        .X = _SPOINT.X + _POINT.X,
+        .Y = _SPOINT.Y + _POINT.Y
+      }
+    );
+  }
+
+  return false;
+}
+
+bool cic_setWindowX(
+  cic_window** _SELF,
+  signed int _X
+) {
+  if (*_SELF != NULL) {
+    cic_point _SPOINT = cic_getScreenPointByWindow(*_SELF, true);
+
+    return cic_setWidgetX(
+      cic_getWindowWidgetRef(*_SELF),
+      _SPOINT.X + _X
+    );
+  }
+
+  return false;
+}
+bool cic_setWindowY(
+  cic_window** _SELF,
+  signed int _Y
+) {
+  if (*_SELF != NULL) {
+    cic_point _SPOINT = cic_getScreenPointByWindow(*_SELF, true);
+
+    return cic_setWidgetY(
+      cic_getWindowWidgetRef(*_SELF),
+      _SPOINT.Y + _Y
+    );
+  }
+
+  return false;
+}
+bool cic_setWindowSize(
+  cic_window** _SELF,
+  cic_size _SIZE
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetSize(
+      cic_getWindowWidgetRef(*_SELF),
+      _SIZE
+    );
+  }
+
+  return false;
+}
+
+bool cic_setWindowWidth(
+  cic_window** _SELF,
+  signed int _WIDTH
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetWidth(
+      cic_getWindowWidgetRef(*_SELF),
+      _WIDTH
+    );
+  }
+
+  return false;
+}
+bool cic_setWindowHeight(
+  cic_window** _SELF,
+  signed int _HEIGHT
+) {
+  if (*_SELF != NULL) {
+    return cic_setWidgetHeight(
+      cic_getWindowWidgetRef(*_SELF),
+      _HEIGHT
+    );
+  }
+
+  return false;
+}
+bool cic_setWindowW(
+  cic_window** _SELF,
+  signed int _WIDTH
+) {
+  return cic_setWindowWidth(_SELF, _WIDTH);
+}
+bool cic_setWindowH(
+  cic_window** _SELF, 
+  signed int _HEIGHT
+) {
+  return cic_setWindowHeight(_SELF, _HEIGHT);
 }
 
 bool cic_windowToCenterScreen(cic_window** _SELF) {
   if (*_SELF != NULL) {
     cic_window* _WINDOW = *_SELF;
 
-    HMONITOR _MONITOR = MonitorFromWindow(
-      cic_getWindowHandle(_WINDOW),
-      MONITOR_DEFAULTTONEAREST
-    );
-
     MONITORINFO _MI;
     _MI.cbSize = sizeof(MONITORINFO);
     GetMonitorInfoW(
-      _MONITOR,
+      _WINDOW->_HMONITOR,
       &_MI
     );
 
     RECT _WORK_AREA = _MI.rcWork;
-    INT X = _WORK_AREA.left;
-    INT Y = _WORK_AREA.top;
-    INT WIDTH = _WORK_AREA.right - _WORK_AREA.left;
-    INT HEIGHT = _WORK_AREA.bottom - _WORK_AREA.top;
+    signed int X = _WORK_AREA.left;
+    signed int Y = _WORK_AREA.top;
+    signed int WIDTH = _WORK_AREA.right - _WORK_AREA.left;
+    signed int HEIGHT = _WORK_AREA.bottom - _WORK_AREA.top;
 
-    INT CENTER_X = (X + (WIDTH / 2)) - (cic_getWindowW(_WINDOW) / 2);
-    INT CENTER_Y = Y + (HEIGHT / 2) - (cic_getWindowH(_WINDOW) / 2);
+    signed int CENTER_X = (X + (WIDTH / 2)) - (cic_getWindowW(_WINDOW) / 2);
+    signed int CENTER_Y = Y + (HEIGHT / 2) - (cic_getWindowH(_WINDOW) / 2);
 
     return cic_setWidgetPosition(
       cic_getWindowWidgetRef(_WINDOW),
@@ -609,10 +766,18 @@ bool cic_maximizeWindow(cic_window** _SELF) {
   if (*_SELF != NULL) {
     cic_window* _WINDOW = *_SELF;
 
-    _WINDOW->_MAXIMIZED = ShowWindow(
-      cic_getWindowHandle(_WINDOW),
-      SW_MAXIMIZE
-    );
+    if (!(_WINDOW->_MAXIMIZED)) {
+      _WINDOW->_MAXIMIZED = ShowWindow(
+        cic_getWindowHandle(_WINDOW),
+        SW_MAXIMIZE
+      );
+    }
+    else {
+      _WINDOW->_MAXIMIZED = !ShowWindow(
+        cic_getWindowHandle(_WINDOW),
+        SW_RESTORE
+      );
+    }
 
     return _WINDOW->_MAXIMIZED;
   }
@@ -649,31 +814,6 @@ bool cic_setWindowTitle(cic_window** _SELF, const wchar_t* _TITLE) {
   return false;
 }
 
-int cic_startWindowMessageLoop(cic_window** _SELF) {
-  if (*_SELF != NULL) {
-    cic_window* _WINDOW = *_SELF;
-    HWND _HANDLE = cic_getWindowHandle(_WINDOW);
-
-    MSG MESSAGE_STRUCT;
-
-    while (GetMessageW(
-      &MESSAGE_STRUCT,
-      _HANDLE,
-      NULL, NULL
-    )) {
-      if (MESSAGE_STRUCT.message == WM_QUIT || MESSAGE_STRUCT.message <= 0)
-        break;
-
-      TranslateMessage(&MESSAGE_STRUCT);
-      DispatchMessage(&MESSAGE_STRUCT);
-    }
-
-    return (int)MESSAGE_STRUCT.wParam;
-  }
-
-  return -1;
-}
-
 bool cic_showWindow(cic_window** _SELF) {
   if (*_SELF != NULL) {
     cic_window* _WINDOW = *_SELF;
@@ -704,66 +844,74 @@ bool cic_hideWindow(cic_window** _SELF) {
 }
 
 cic_size cic_getWindowSize(cic_window* _SELF) {
-  if (_SELF != NULL) {
-    cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
+  if (_SELF != NULL)
+    return cic_getWidgetSize(*cic_getWindowWidgetRef(_SELF));
 
-    if (_BASE != NULL)
-      return _BASE->_SIZE;
-  }
-
-  return (cic_size) { -1, -1 };
+  return (cic_size) { .WIDTH = -1, .HEIGHT = -1 };
 }
-int cic_getWindowWidth(cic_window* _SELF) {
-  if (_SELF != NULL) {
-    cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
-
-    if (_BASE != NULL)
-      return _BASE->_SIZE.WIDTH;
-  }
+signed int cic_getWindowWidth(cic_window* _SELF) {
+  if (_SELF != NULL)
+    return cic_getWidgetW(*cic_getWindowWidgetRef(_SELF));
 
   return -1;
 }
-int cic_getWindowHeight(cic_window* _SELF) {
-  if (_SELF != NULL) {
-    cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
-
-    if (_BASE != NULL)
-      return _BASE->_SIZE.HEIGHT;
-  }
+signed int cic_getWindowHeight(cic_window* _SELF) {
+  if (_SELF != NULL)
+    return cic_getWidgetH(*cic_getWindowWidgetRef(_SELF));
 
   return -1;
 }
-int cic_getWindowW(cic_window* _SELF) { return cic_getWindowWidth(_SELF); }
-int cic_getWindowH(cic_window* _SELF) { return cic_getWindowHeight(_SELF); }
+signed int cic_getWindowW(cic_window* _SELF) {
+  return cic_getWindowWidth(_SELF);
+}
+signed int cic_getWindowH(cic_window* _SELF) {
+  return cic_getWindowHeight(_SELF);
+}
 
 cic_point cic_getWindowPosition(cic_window* _SELF) {
   if (_SELF != NULL) {
     cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
 
-    if (_BASE != NULL)
-      return _BASE->_POSITION;
+    return cic_getWidgetPosition(_BASE);
   }
 
-  cic_point _NP = { -1, -1 };
-  return _NP;
+  return (cic_point) { .X = -1, .Y = -1 };
 }
-int cic_getWindowX(cic_window* _SELF) {
-  if (_SELF != NULL) {
-    cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
-
-    if (_BASE != NULL)
-      return _BASE->_POSITION.X;
-  }
+signed int cic_getWindowX(cic_window* _SELF) {
+  if (_SELF != NULL)
+    return cic_getWindowPosition(_SELF).X;
 
   return -1;
 }
-int cic_getWindowY(cic_window* _SELF) {
-  if (_SELF != NULL) {
-    cic_widget* _BASE = *cic_getWindowWidgetRef(_SELF);
+signed int cic_getWindowY(cic_window* _SELF) {
+  if (_SELF != NULL)
+    return cic_getWindowPosition(_SELF).Y;
 
-    if (_BASE != NULL)
-      return _BASE->_POSITION.Y;
+  return -1;
+}
+
+cic_point cic_getWindowCenter(cic_window* _SELF) {
+  if (_SELF != NULL) {
+    cic_point _CENTER = { 
+      .X = cic_getWindowW(_SELF) / 2,
+      .Y = cic_getWindowH(_SELF) / 2
+    };
+
+    return _CENTER;
   }
+
+  return (cic_point) { .X = -1, .Y = -1 };
+}
+
+signed int cic_getWindowCenterX(cic_window* _SELF) {
+  if (_SELF != NULL)
+    return cic_getWindowCenter(_SELF).X;
+
+  return -1;
+}
+signed int cic_getWindowCenterY(cic_window* _SELF) {
+  if (_SELF != NULL)
+    return cic_getWindowCenter(_SELF).Y;
 
   return -1;
 }

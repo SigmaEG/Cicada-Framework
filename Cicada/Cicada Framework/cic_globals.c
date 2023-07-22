@@ -1,4 +1,5 @@
 #include "include/cic_globals.h"
+#include "include/cic_window.h"
 
 typedef struct _WIDGET_BASE_PTR_LIST {
   cic_widget** LIST;
@@ -19,18 +20,23 @@ bool cic_insertRawHandleRef(cic_widget** _WIDGET_REF) {
   size_t _FDX = -1;
 
   for (size_t IDX = 0; IDX < APP_HWND_LIST.ELEMENTS; ++IDX) {
-    if (APP_HWND_LIST.LIST[IDX] == *_WIDGET_REF)
+    if (APP_HWND_LIST.LIST[IDX] == *_WIDGET_REF) {
       _FDX = IDX;
+
+      break;
+    }
   }
 
   if (_FDX != -1)
     return false;
 
-  APP_HWND_LIST.ELEMENTS += 1;
-  APP_HWND_LIST.LIST = (cic_widget**)realloc(APP_HWND_LIST.LIST, APP_HWND_LIST.ELEMENTS * sizeof(struct _WIDGET_STRUCT*));
+  ++APP_HWND_LIST.ELEMENTS;
+  cic_widget** _REALLOC_TEMP = (cic_widget**)realloc(APP_HWND_LIST.LIST, APP_HWND_LIST.ELEMENTS * sizeof(struct _WIDGET_STRUCT*));
 
-  if (APP_HWND_LIST.LIST != NULL)
+  if (_REALLOC_TEMP != NULL) {
+    APP_HWND_LIST.LIST = _REALLOC_TEMP;
     APP_HWND_LIST.LIST[APP_HWND_LIST.ELEMENTS - 1] = *_WIDGET_REF;
+  }
   else
     return false;
 
@@ -43,9 +49,7 @@ bool cic_removeRawHandleRef(cic_widget** _WIDGET_REF) {
   size_t _FDX = -1;
 
   for (size_t IDX = 0; IDX < APP_HWND_LIST.ELEMENTS; ++IDX) {
-    cic_widget* WIDGET_REF = APP_HWND_LIST.LIST[IDX];
-
-    if (WIDGET_REF == *_WIDGET_REF) {
+    if (APP_HWND_LIST.LIST[IDX] == *_WIDGET_REF) {
       _FDX = IDX;
 
       break;
@@ -58,20 +62,25 @@ bool cic_removeRawHandleRef(cic_widget** _WIDGET_REF) {
   for (size_t IDX = _FDX; IDX < APP_HWND_LIST.ELEMENTS; ++IDX)
     APP_HWND_LIST.LIST[IDX] = APP_HWND_LIST.LIST[IDX + 1];
 
-  APP_HWND_LIST.ELEMENTS -= 1;
+  --APP_HWND_LIST.ELEMENTS;
 
   if (APP_HWND_LIST.ELEMENTS == 0) {
     free(APP_HWND_LIST.LIST);
     APP_HWND_LIST.LIST = NULL;
+
+    return true;
   }
   else {
-    APP_HWND_LIST.LIST = (cic_widget**)realloc(APP_HWND_LIST.LIST, APP_HWND_LIST.ELEMENTS * sizeof(struct _WIDGET_STRUCT*));
+    cic_widget** _REALLOC_TEMP = (cic_widget**)realloc(APP_HWND_LIST.LIST, APP_HWND_LIST.ELEMENTS * sizeof(struct _WIDGET_STRUCT*));
 
-    if (APP_HWND_LIST.LIST == NULL)
-      return false;
+    if (_REALLOC_TEMP != NULL) {
+      APP_HWND_LIST.LIST = _REALLOC_TEMP;
+
+      return true;
+    }
   }
 
-  return true;
+  return false;
 }
 cic_widget* cic_getRefByRawHandle(HWND _HANDLE) {
   if (APP_HWND_LIST.ELEMENTS == 0)
@@ -138,10 +147,12 @@ bool cic_createEventHandler(
         else {
           if (cic_getEventHandler(_WIDGET, _EVENT) == NULL && _WIDGET->_EVENTS != NULL) {
             _WIDGET->_nEVENTS += 1;
-            _WIDGET->_EVENTS = (cic_eventStruct**)realloc(_WIDGET->_EVENTS, _WIDGET->_nEVENTS * sizeof(struct _EVENT_STRUCT*));
+            cic_eventStruct** _REALLOC_TEMP = (cic_eventStruct**)realloc(_WIDGET->_EVENTS, _WIDGET->_nEVENTS * sizeof(struct _EVENT_STRUCT*));
 
-            if (_WIDGET->_EVENTS != NULL)
+            if (_REALLOC_TEMP != NULL) {
+              _WIDGET->_EVENTS = _REALLOC_TEMP;
               _WIDGET->_EVENTS[_WIDGET->_nEVENTS - 1] = _EST;
+            }
             else
               return false;
           }
@@ -186,7 +197,7 @@ CIC_CALLBACK cic_getEventHandler(
 }
 
 cic_region* cic_createRegion(HRGN _REGION) {
-  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _cic_REGION_STRUCT));
+  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _CIC_REGION_STRUCT));
 
   if (REGION != NULL)
     REGION->_REGION = _REGION;
@@ -197,7 +208,7 @@ cic_region* cic_createRectRegion(
   cic_point _POSITION,
   cic_size _SIZE
 ) {
-  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _cic_REGION_STRUCT));
+  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _CIC_REGION_STRUCT));
 
   if (REGION != NULL) {
     REGION->_REGION = CreateRectRgn(
@@ -211,9 +222,9 @@ cic_region* cic_createRectRegion(
 cic_region* cic_createRoundRectRegion(
   cic_point _POSITION,
   cic_size _SIZE,
-  int _RADIUS
+  signed int _RADIUS
 ) {
-  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _cic_REGION_STRUCT));
+  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _CIC_REGION_STRUCT));
 
   if (REGION != NULL) {
     REGION->_REGION = CreateRoundRectRgn(
@@ -229,7 +240,7 @@ cic_region* cic_createEllipticRegion(
   cic_point _POSITION,
   cic_size _RADIUSs
 ) {
-  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _cic_REGION_STRUCT));
+  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _CIC_REGION_STRUCT));
 
   if (REGION != NULL) {
     REGION->_REGION = CreateEllipticRgn(
@@ -243,9 +254,9 @@ cic_region* cic_createEllipticRegion(
 cic_region* cic_createPolygonRegion(
   cic_point POINTS[],
   size_t _nPOINTS,
-  int _POLY_MODE
+  signed int _POLY_MODE
 ) {
-  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _cic_REGION_STRUCT));
+  cic_region* REGION = (cic_region*)calloc(1, sizeof(struct _CIC_REGION_STRUCT));
 
   if (REGION != NULL) {
     POINT* _POINTS = (POINT*)calloc(_nPOINTS, sizeof(struct tagPOINT));
@@ -260,7 +271,7 @@ cic_region* cic_createPolygonRegion(
         _POINTS[IDX] = _PT;
       }
 
-      REGION->_REGION = CreatePolygonRgn(_POINTS, (int)_nPOINTS, _POLY_MODE);
+      REGION->_REGION = CreatePolygonRgn(_POINTS, (signed int)_nPOINTS, _POLY_MODE);
 
       free(_POINTS);
       _POINTS = NULL;
@@ -300,9 +311,9 @@ HRGN cic_getHRGNClone(cic_region* _REGION) {
 }
 bool cic_combineRegion(HRGN _DEST_REGION, HRGN _SRC_REGION, cic_rCombineMode _COMBINE_MODE) {
   if (_COMBINE_MODE != CMODE_COPY)
-    return CombineRgn(_DEST_REGION, _DEST_REGION, _SRC_REGION, (int)_COMBINE_MODE) >= 2;
+    return CombineRgn(_DEST_REGION, _DEST_REGION, _SRC_REGION, (signed int)_COMBINE_MODE) >= 2;
   else
-    return CombineRgn(_DEST_REGION, _SRC_REGION, 0, (int)_COMBINE_MODE) >= 2;
+    return CombineRgn(_DEST_REGION, _SRC_REGION, 0, (signed int)_COMBINE_MODE) >= 2;
 
   return false;
 }
@@ -324,23 +335,27 @@ bool cic_destroyRegion(cic_region** _REGION) {
 }
 
 cic_size cic_rectToSize(RECT _RECT) {
-  cic_size SIZE;
-  SIZE.WIDTH = _RECT.right - _RECT.left;
-  SIZE.HEIGHT = _RECT.bottom - _RECT.top;
-
-  return SIZE;
+  return (cic_size) {
+    .WIDTH = _RECT.right - _RECT.left,
+    .HEIGHT = _RECT.bottom - _RECT.top
+  };
+}
+cic_point cic_rectToPoint(RECT _RECT) {
+  return (cic_point) {
+    .X = _RECT.left,
+      .Y = _RECT.top
+  };
 }
 cic_point cic_pointToPoint(POINT _POINT) {
-  cic_point POINT;
-  POINT.X = _POINT.x;
-  POINT.Y = _POINT.y;
-
-  return POINT;
+  return (cic_point) {
+    .X = _POINT.x,
+    .Y = _POINT.y
+  };
 }
 
 bool cic_lpcwstrToLPWSTR(
-  LPWSTR* _DEST,
-  LPCWSTR _SOURCE
+  wchar_t** _DEST,
+  const wchar_t* _SOURCE
 ) {
   if (*_DEST != NULL)
     free(*_DEST);
@@ -421,7 +436,7 @@ bool cic_getClipboard(wchar_t** _DEST) {
 }
 
 bool cic_isKeyDown(
-  int _VK_CODE,
+  signed int _VK_CODE,
   bool _TOGGLE_CHECK
 ) {
   if (!(_TOGGLE_CHECK)) {
@@ -445,4 +460,233 @@ LPCWSTR cic_widgetTypeToLPCWSTR(cic_widgetType _TYPE) {
     _TYPE == WTYPE_SCROLLBAR ? L"SCROLLBAR" :
     L"NULL_CLASS"
     );
+}
+
+unsigned int cic_getNumOfDisplayMonitors() {
+  return GetSystemMetrics(SM_CMONITORS);
+}
+
+typedef struct _MONITOR_ENUM_STRUCT {
+  signed int _IDX;
+  HMONITOR _HMONITOR;
+} _cic_monitorEnum;
+
+static signed int CALLBACK _cic_MonitorByIdx(
+  HMONITOR _HMONITOR,
+  HDC _MONITOR_DC,
+  LPRECT _MONITOR_RECT,
+  LPARAM _LPARAM
+) {
+  _cic_monitorEnum* _MONITOR_ENUM = (_cic_monitorEnum*)_LPARAM;
+
+  if (--_MONITOR_ENUM->_IDX < 0) {
+    _MONITOR_ENUM->_HMONITOR = _HMONITOR;
+
+    return false;
+  }
+
+  return true;
+}
+HMONITOR cic_getMonitorByIdx(unsigned int _MONITOR_IDX) {
+  _cic_monitorEnum _MONITOR_ENUM;
+  _MONITOR_ENUM._IDX = _MONITOR_IDX;
+  _MONITOR_ENUM._HMONITOR = NULL;
+
+  EnumDisplayMonitors(
+    NULL,
+    NULL,
+    _cic_MonitorByIdx,
+    (LPARAM)&_MONITOR_ENUM
+  );
+
+  return _MONITOR_ENUM._HMONITOR;
+}
+
+HMONITOR cic_getMonitorByWindow(cic_window* _WINDOW) {
+  if (_WINDOW != NULL)
+    return _WINDOW->_HMONITOR;
+
+  return NULL;
+}
+
+static unsigned int _MONITOR_LOOP_IDX = 0;
+static signed int CALLBACK _cic_MonitorByHandle(
+  HMONITOR _HMONITOR,
+  HDC _MONITOR_DC,
+  LPRECT _MONITOR_RECT,
+  LPARAM _LPARAM
+) {
+  _cic_monitorEnum* _MONITOR_ENUM = (_cic_monitorEnum*)_LPARAM;
+
+  if (_HMONITOR == _MONITOR_ENUM->_HMONITOR) {
+    _MONITOR_ENUM->_IDX = _MONITOR_LOOP_IDX;
+    _MONITOR_LOOP_IDX = 0;
+
+    return false;
+  }
+
+  ++_MONITOR_LOOP_IDX;
+
+  return true;
+  
+}
+signed int cic_getMonitorIdxByHandle(HMONITOR _HMONITOR) {
+  _cic_monitorEnum _MONITOR_ENUM;
+  _MONITOR_ENUM._IDX = -1;
+  _MONITOR_ENUM._HMONITOR = _HMONITOR;
+
+  EnumDisplayMonitors(
+    NULL,
+    NULL,
+    _cic_MonitorByHandle,
+    (LPARAM)&_MONITOR_ENUM
+  );
+
+  _MONITOR_LOOP_IDX = 0;
+
+  return _MONITOR_ENUM._IDX;
+}
+
+cic_size cic_getScreenSizeByWindow(
+  cic_window* _WINDOW,
+  bool _WORKAREA
+) {
+  HMONITOR _HMONITOR = MonitorFromWindow(
+    cic_getWindowHandle(_WINDOW),
+    MONITOR_DEFAULTTONEAREST
+  );
+
+  MONITORINFO _MONITOR_INFO;
+  _MONITOR_INFO.cbSize = sizeof(MONITORINFO);
+  GetMonitorInfo(_HMONITOR, &_MONITOR_INFO);
+
+  if (_WORKAREA)
+    return cic_rectToSize(_MONITOR_INFO.rcWork);
+  else
+    return cic_rectToSize(_MONITOR_INFO.rcMonitor);
+}
+cic_point cic_getScreenPointByWindow(
+  cic_window* _WINDOW,
+  bool _WORKAREA
+) {
+  HMONITOR _HMONITOR = MonitorFromWindow(
+    cic_getWindowHandle(_WINDOW),
+    MONITOR_DEFAULTTONEAREST
+  );
+
+  MONITORINFO _MONITOR_INFO;
+  _MONITOR_INFO.cbSize = sizeof(MONITORINFO);
+  GetMonitorInfo(_HMONITOR, &_MONITOR_INFO);
+
+  if (_WORKAREA)
+    return cic_rectToPoint(_MONITOR_INFO.rcWork);
+  else
+    return cic_rectToPoint(_MONITOR_INFO.rcMonitor);
+}
+cic_point cic_getScreenCenterByWindow(
+  cic_window* _WINDOW,
+  bool _WORKAREA
+) {
+  HMONITOR _HMONITOR = MonitorFromWindow(
+    cic_getWindowHandle(_WINDOW),
+    MONITOR_DEFAULTTONEAREST
+  );
+
+  MONITORINFO _MONITOR_INFO;
+  _MONITOR_INFO.cbSize = sizeof(MONITORINFO);
+  GetMonitorInfo(_HMONITOR, &_MONITOR_INFO);
+
+  cic_size _MONITOR_SZ;
+
+  if (_WORKAREA)
+    _MONITOR_SZ = cic_rectToSize(_MONITOR_INFO.rcWork);
+  else
+    _MONITOR_SZ = cic_rectToSize(_MONITOR_INFO.rcMonitor);
+
+  cic_point _CENTER = {
+    .X = (_WORKAREA ? _MONITOR_INFO.rcWork.left : _MONITOR_INFO.rcMonitor.left) + (_MONITOR_SZ.WIDTH / 2),
+    .Y = (_WORKAREA ? _MONITOR_INFO.rcWork.top : _MONITOR_INFO.rcMonitor.top) + (_MONITOR_SZ.HEIGHT / 2)
+  };
+
+  return _CENTER;
+}
+cic_size cic_getScreenSizeByIdx(
+  unsigned int _MONITOR_IDX,
+  bool _WORKAREA
+) {
+  HMONITOR _HMONITOR = cic_getMonitorByIdx(_MONITOR_IDX);
+
+  if (_HMONITOR != NULL) {
+    MONITORINFO _MONITOR_INFO;
+    _MONITOR_INFO.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(_HMONITOR, &_MONITOR_INFO);
+
+    if (_WORKAREA)
+      return cic_rectToSize(_MONITOR_INFO.rcWork);
+    else
+      return cic_rectToSize(_MONITOR_INFO.rcMonitor);
+  }
+
+  return (cic_size) { .WIDTH = -1, .HEIGHT = -1 };
+}
+cic_point cic_getScreenPointByIdx(
+  unsigned int _MONITOR_IDX,
+  bool _WORKAREA
+) {
+  HMONITOR _HMONITOR = cic_getMonitorByIdx(_MONITOR_IDX);
+
+  if (_HMONITOR != NULL) {
+    MONITORINFO _MONITOR_INFO;
+    _MONITOR_INFO.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(_HMONITOR, &_MONITOR_INFO);
+
+    if (_WORKAREA)
+      return cic_rectToPoint(_MONITOR_INFO.rcWork);
+    else
+      return cic_rectToPoint(_MONITOR_INFO.rcMonitor);
+  }
+
+  return (cic_point) { -1, -1 };
+}
+cic_point cic_getScreenCenterByIdx(
+  unsigned int _MONITOR_IDX,
+  bool _WORKAREA
+) {
+  HMONITOR _HMONITOR = cic_getMonitorByIdx(_MONITOR_IDX);
+  
+  if (_HMONITOR != NULL) {
+    MONITORINFO _MONITOR_INFO;
+    _MONITOR_INFO.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(_HMONITOR, &_MONITOR_INFO);
+
+    cic_size _MONITOR_SZ;
+
+    if (_WORKAREA)
+      _MONITOR_SZ = cic_rectToSize(_MONITOR_INFO.rcWork);
+    else
+      _MONITOR_SZ = cic_rectToSize(_MONITOR_INFO.rcMonitor);
+
+    cic_point _CENTER = {
+      .X = (_WORKAREA ? _MONITOR_INFO.rcWork.left : _MONITOR_INFO.rcMonitor.left) + (_MONITOR_SZ.WIDTH / 2),
+      .Y = (_WORKAREA ? _MONITOR_INFO.rcWork.top : _MONITOR_INFO.rcMonitor.top) + (_MONITOR_SZ.HEIGHT / 2)
+    };
+
+    return _CENTER;
+  }
+
+  return (cic_point) { .X = -1, .Y = -1 };
+}
+
+cic_point cic_calcCenterPoint(cic_point _CENTER_POINT, cic_size _SIZE_OF_SRC) {
+  cic_point _CENTER = {
+    .X = _CENTER_POINT.X - (_SIZE_OF_SRC.WIDTH / 2),
+    .Y = _CENTER_POINT.Y - (_SIZE_OF_SRC.HEIGHT / 2)
+  };
+
+  return _CENTER;
+}
+
+
+bool cic_exit(signed int _EXIT_CODE) {
+  PostQuitMessage(0);
 }

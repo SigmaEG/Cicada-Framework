@@ -9,8 +9,8 @@ extern "C" {
 
   cic_widget* cic_createWidget(
     cic_widget* _PARENT,
-    const wchar_t* _TITLE,
-    const wchar_t* _ID,
+    wchar_t* _TITLE,
+    wchar_t* _ID,
     cic_point _POSITION,
     cic_size _SIZE,
     bool _APICALL
@@ -18,11 +18,11 @@ extern "C" {
 
   HWND cic_getWidgetHandle(cic_widget* _SELF);
 
-  bool cic_toCenterXOfWidget(
+  bool cic_toCenterXWidget(
     cic_widget** _SELF,
     cic_widget* _SRC
   );
-  bool cic_toCenterYOfWidget(
+  bool cic_toCenterYWidget(
     cic_widget** _SELF,
     cic_widget* _SRC
   );
@@ -68,9 +68,33 @@ extern "C" {
     cic_widget** _SELF,
     cic_point _POSITION
   );
+  bool cic_setWidgetX(
+    cic_widget** _SELF,
+    signed int _X
+  );
+  bool cic_setWidgetY(
+    cic_widget** _SELF,
+    signed int _Y
+  );
   bool cic_setWidgetSize(
     cic_widget** _SELF,
     cic_size _SIZE
+  );
+  bool cic_setWidgetWidth(
+    cic_widget** _SELF,
+    signed int _WIDTH
+  );
+  bool cic_setWidgetHeight(
+    cic_widget** _SELF,
+    signed int _HEIGHT
+  );
+  bool cic_setWidgetW(
+    cic_widget** _SELF,
+    signed int _WIDTH
+  );
+  bool cic_setWidgetH(
+    cic_widget** _SELF,
+    signed int _HEIGHT
   );
   bool cic_setWidgetLabel(
     cic_widget** _SELF,
@@ -102,7 +126,7 @@ extern "C" {
   );
   bool cic_setWidgetFontSize(
     cic_widget** _SELF,
-    int SIZE
+    signed int SIZE
   );
   bool cic_setWidgetShape(
     cic_widget** _WIDGET,
@@ -112,17 +136,17 @@ extern "C" {
   bool cic_redrawWidget(cic_widget** _SELF);
 
   cic_point cic_getWidgetPosition(cic_widget* _SELF);
-  int cic_getWidgetX(cic_widget* _SELF);
-  int cic_getWidgetY(cic_widget* _SELF);
+  signed int cic_getWidgetX(cic_widget* _SELF);
+  signed int cic_getWidgetY(cic_widget* _SELF);
 
   cic_size cic_getWidgetSize(cic_widget* _SELF);
-  int cic_getWidgetWidth(cic_widget* _SELF);
-  int cic_getWidgetHeight(cic_widget* _SELF);
+  signed int cic_getWidgetWidth(cic_widget* _SELF);
+  signed int cic_getWidgetHeight(cic_widget* _SELF);
 
-  int cic_getWidgetW(cic_widget* _SELF);
-  int cic_getWidgetH(cic_widget* _SELF);
+  signed int cic_getWidgetW(cic_widget* _SELF);
+  signed int cic_getWidgetH(cic_widget* _SELF);
 
-  int cic_getWidgetMouseWheelDelta(cic_widget* _SELF);
+  signed int cic_getWidgetMouseWheelDelta(cic_widget* _SELF);
 
   const wchar_t* cic_getWidgetLabel(cic_widget* _SELF);
   const wchar_t* cic_getWidgetTooltip(cic_widget* _SELF);
@@ -131,11 +155,11 @@ extern "C" {
   cic_color cic_getWidgetBackgroundColor(cic_widget* _SELF);
   cic_color cic_getWidgetSelectionColor(cic_widget* _SELF);
   cic_font cic_getWidgetLabelFont(cic_widget* _SELF);
-  int cic_getWidgetFontSize(cic_widget* _SELF);
+  signed int cic_getWidgetFontSize(cic_widget* _SELF);
 
   cic_point cic_getWidgetCenter(cic_widget* _SELF);
-  int cic_getWidgetCenterX(cic_widget* _SELF);
-  int cic_getWidgetCenterY(cic_widget* _SELF);
+  signed int cic_getWidgetCenterX(cic_widget* _SELF);
+  signed int cic_getWidgetCenterY(cic_widget* _SELF);
 
   bool cic_isWidgetFocused(cic_widget* _SELF);
   bool cic_isWidgetVisible(cic_widget* _SELF);
