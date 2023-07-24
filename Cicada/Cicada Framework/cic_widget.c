@@ -1,5 +1,6 @@
 #include "include/cic_widget.h"
 #include "include/cic_group.h"
+#include "include/cic_leak_detector.h"
 
 static LRESULT CALLBACK _WIDGET_PROC(
   HWND _HANDLE,
@@ -8,7 +9,7 @@ static LRESULT CALLBACK _WIDGET_PROC(
   LPARAM _LPARAM
 ) {
   if (_MESSAGE == WM_NCCREATE) {
-    if (cic_getRefByRawHandle(_HANDLE) == NULL) {
+    if (cic_getWidgetByRawHandle(_HANDLE) == NULL) {
       LPCREATESTRUCT _LPCS = (LPCREATESTRUCT)_LPARAM;
 
       if (_LPCS != NULL) {
@@ -23,7 +24,7 @@ static LRESULT CALLBACK _WIDGET_PROC(
     }
   }
 
-  cic_widget* _this = cic_getRefByRawHandle(_HANDLE);
+  cic_widget* _this = cic_getWidgetByRawHandle(_HANDLE);
 
   if (_this != NULL) {
     switch (_MESSAGE) {
@@ -44,7 +45,7 @@ static LRESULT CALLBACK _WIDGET_PROC(
     };
     }
 
-    return CallWindowProcW(
+    return CallWindowProc(
       _this->_PREV_PROC,
       _HANDLE,
       _MESSAGE,
@@ -64,6 +65,23 @@ cic_widget* cic_createWidget(
   cic_size _SIZE,
   bool _APICALL
 ) {
+  if (cic_getWidgetById(_ID) != NULL) {
+    wchar_t* _DUP_ID = (wchar_t*)calloc(wcslen(L"DUPLICATE WIDGET_ID : ") + wcslen(_ID) + 1, sizeof(wchar_t));
+    wsprintf(_DUP_ID, L"DUPLICATE WIDGET_ID : %ls", _ID);
+
+    printf("Duplicate WidgetID Found During Runtime : %ls\n", _DUP_ID);
+
+    MessageBox(
+      NULL,
+      L"Duplicate WidgetID Found During Runtime",
+      _ID,
+      MB_OK | MB_ICONWARNING
+    );
+    exit(1);
+
+    return NULL;
+  }
+
   cic_widget* WIDGET = (cic_widget*)calloc(1, sizeof(struct _WIDGET_STRUCT));
 
   if (WIDGET != NULL) {
@@ -97,24 +115,25 @@ cic_widget* cic_createWidget(
       WNDCLASSW WIDG_CLASS;
       SecureZeroMemory(&WIDG_CLASS, sizeof(WNDCLASSW));
       WIDG_CLASS.lpszClassName = _ID;
-      WIDG_CLASS.hInstance = GetModuleHandleW(0);
-      WIDG_CLASS.hCursor = LoadCursor(0, IDC_ARROW);
+      WIDG_CLASS.hInstance = GetModuleHandle(NULL);
+      WIDG_CLASS.hCursor = LoadCursor(NULL, MAKEINTRESOURCE(IDC_ARROW));
       WIDG_CLASS.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
       WIDG_CLASS.style = CS_HREDRAW | CS_VREDRAW;
       WIDG_CLASS.lpfnWndProc = _WIDGET_PROC;
 
-      WIDGET->_HANDLE = CreateWindowW(
+      WIDGET->_HANDLE = CreateWindowEx(
+        0L,
         _ID,
         _TITLE,
         WS_CHILD | WS_VISIBLE,
         _POSITION.X, _POSITION.Y,
         _SIZE.WIDTH, _SIZE.HEIGHT,
-        (HWND)cic_getWidgetHandle(_PARENT), (HMENU)0,
-        (HINSTANCE)GetModuleHandleW(0),
+        (HWND)cic_getWidgetHandle(_PARENT), (HMENU)NULL,
+        WIDG_CLASS.hInstance,
         NULL
       );
 
-      if (WIDGET->_HANDLE == (HWND)0) {
+      if (WIDGET->_HANDLE == (HWND)NULL) {
         cic_destroyWidget(&WIDGET);
 
         return NULL;
@@ -384,7 +403,7 @@ bool cic_setWidgetSize(
 
     return SetWindowPos(
       cic_getWidgetHandle(_WIDGET),
-      (HWND)0,
+      (HWND)NULL,
       0, 0,
       cic_getWidgetW(_WIDGET), cic_getWidgetH(_WIDGET),
       SWP_NOMOVE | SWP_NOZORDER
@@ -429,15 +448,14 @@ bool cic_setWidgetH(
   cic_widget** _SELF,
   signed int _HEIGHT
 ) {
-  return cic_setWidgetH(_SELF, _HEIGHT);
+  return cic_setWidgetHeight(_SELF, _HEIGHT);
 }
 bool cic_setWidgetLabel(
   cic_widget** _SELF,
   const wchar_t* _TITLE
 ) {
   if (*_SELF != NULL) {
-    cic_widget* _WIDGET = *_SELF;
-    cic_lpcwstrToLPWSTR(&_WIDGET->_TITLE, _TITLE);
+    cic_lpcwstrToLPWSTR(&((*_SELF)->_TITLE), _TITLE);
 
     return cic_redrawWidget(_SELF);
   }
@@ -520,7 +538,7 @@ bool cic_setWidgetLabelFont(
     if (_WIDGET->_HFONT != 0)
       DeleteObject(_WIDGET->_HFONT);
 
-    _WIDGET->_HFONT = CreateFontW(
+    _WIDGET->_HFONT = CreateFont(
       _WIDGET->_FONT.FONT_SIZE,
       _WIDGET->_FONT.FONT_SIZE,
       _WIDGET->_FONT.ANGLE,
@@ -593,7 +611,7 @@ bool cic_setWidgetShape(
     }
 
     (*_SELF)->_STYLE_BEF_SHAPE = 0;
-    (*_SELF)->_HAS_SHAPE = 0;
+    (*_SELF)->_HAS_SHAPE = false;
     cic_setRegion(
       &((*_SELF)->_SHAPE),
       (HRGN)NULL
@@ -791,7 +809,7 @@ cic_widget* cic_getWidgetParent(cic_widget* _SELF) {
 }
 cic_widget* cic_getWidgetWindow(cic_widget* _SELF) {
   if (_SELF != NULL) {
-    return cic_getRefByRawHandle(
+    return cic_getWidgetByRawHandle(
       GetAncestor(
         cic_getWidgetHandle(_SELF),
         GA_ROOT
@@ -803,7 +821,7 @@ cic_widget* cic_getWidgetWindow(cic_widget* _SELF) {
 }
 cic_widget* cic_getWidgetTopWindow(cic_widget* _SELF) {
   if (_SELF != NULL) {
-    return cic_getRefByRawHandle(
+    return cic_getWidgetByRawHandle(
       GetAncestor(
         cic_getWidgetHandle(_SELF),
         GA_ROOTOWNER

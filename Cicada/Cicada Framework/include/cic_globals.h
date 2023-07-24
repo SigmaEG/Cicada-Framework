@@ -1,12 +1,12 @@
 #ifndef CIC_GLOBALS_H
 #define CIC_GLOBALS_H
 
-#define SGTM_FULLSCREEN 71409
-#define SGTM_RESTORE_FS 71410
-#define SGTM_MAXIMIZE 71411
-#define SGTM_RESTORE_MXZ 71412
-#define SGTM_MINIMIZE 71413
-#define SGTM_RESTORE_MIZ 71414
+#define CICM_FULLSCREEN 71409
+#define CICM_RESTORE_FS 71410
+#define CICM_MAXIMIZE 71411
+#define CICM_RESTORE_MXZ 71412
+#define CICM_MINIMIZE 71413
+#define CICM_RESTORE_MIZ 71414
 
 #include <Windows.h>
 #include <CommCtrl.h>
@@ -17,8 +17,20 @@
 #include <string.h>
 #include <wchar.h>
 
+
 #ifdef __cplusplus
+template<typename T>
+T cic_upcastWidgetRef(cic_widget* _WIDGET_REF) {
+  return (T)_WIDGET_REF->_WIDGET_UPCAST_REF;
+}
+
 extern "C" {
+#else
+  #if __STDC_VERSION__ >= 201112L
+    #define cic_upcastWidgetRef(cic_widgetPTR, cic_castType) _Generic(cic_widgetPTR, cic_widget*: (cic_castType)cic_widgetPTR->_WIDGET_UPCAST_REF, default: NULL)
+  #else
+    #define cic_upcastWidgetRef(cic_widgetPTR, cic_castType) (cic_castType)cic_widgetPTR->_WIDGET_UPCAST_REF
+  #endif
 #endif
 
   typedef enum _CIC_WIDGET_STYLE_ENUM {
@@ -200,7 +212,7 @@ extern "C" {
   typedef struct _CIC_FONT_STRUCT {
     wchar_t* FONT_NAME;
     unsigned int FONT_SIZE;
-    int ANGLE;
+    signed int ANGLE;
     cic_fontQuality QUALITY;
     cic_fontWeight WEIGHT;
     cic_charSet CHARSET;
@@ -298,8 +310,8 @@ extern "C" {
 
   bool cic_insertRawHandleRef(cic_widget** _WIDGET_REF);
   bool cic_removeRawHandleRef(cic_widget** _WIDGET_REF);
-  cic_widget* cic_getRefByRawHandle(HWND _HANDLE);
-  cic_widget* cic_getRefById(const wchar_t* _ID);
+  cic_widget* cic_getWidgetByRawHandle(HWND _HANDLE);
+  cic_widget* cic_getWidgetById(const wchar_t* _ID);
 
   bool cic_createEventHandler(
     cic_widget** _SELF,
@@ -342,6 +354,18 @@ extern "C" {
   );
 
   bool cic_destroyRegion(cic_region** _REGION);
+
+  cic_font cic_createFont(
+    const wchar_t* _FONT_NAME,
+    unsigned int _FONT_SZ,
+    signed int _FONT_ANGLE,
+    cic_fontWeight _FONT_WEIGHT,
+    cic_charSet _FONT_CHARSET,
+    cic_fontQuality _FONT_QUALITY,
+    bool _IS_ITALIC,
+    bool _IS_UNDERLINED,
+    bool _HAS_STRIKEOUT
+  );
 
   cic_size cic_rectToSize(RECT _RECT);
   cic_point cic_rectToPoint(RECT _RECT);

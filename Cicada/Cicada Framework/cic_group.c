@@ -1,4 +1,5 @@
 #include "include/cic_group.h"
+#include "include/cic_leak_detector.h"
 
 cic_group* cic_createGroup(cic_widget** _WIDGET_REF) {
   if (_WIDGET_REF != NULL) {

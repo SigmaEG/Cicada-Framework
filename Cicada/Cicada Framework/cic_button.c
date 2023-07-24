@@ -1,5 +1,6 @@
 #include "include/cic_button.h"
 #include "include/cic_widget.h"
+#include "include/cic_leak_detector.h"
 
 static void _BTN_DRAW(
   cic_button** _SELF,
@@ -12,6 +13,7 @@ static void _BTN_DRAW(
     HBRUSH BRUSH = CreateSolidBrush(RGB(_BASE->_BG_COLOR.RED, _BASE->_BG_COLOR.GREEN, _BASE->_BG_COLOR.BLUE));
     SetTextColor(_DC, RGB(_BASE->_FG_COLOR.RED, _BASE->_FG_COLOR.GREEN, _BASE->_FG_COLOR.BLUE));
     SetBkMode(_DC, TRANSPARENT);
+    SelectObject(_DC, _BASE->_HFONT);
 
     if (!(_BASE->_HAS_SHAPE))
       FillRect(_DC, &_PS->rcPaint, BRUSH);
@@ -49,7 +51,7 @@ static LRESULT CALLBACK _BTN_PROC(
 ) {
   if (_MESSAGE == WM_NCCREATE) {
 
-    if (cic_getRefByRawHandle(_HANDLE) == NULL) {
+    if (cic_getWidgetByRawHandle(_HANDLE) == NULL) {
       LPCREATESTRUCT _LPCS = (LPCREATESTRUCT)_LPARAM;
 
       if (_LPCS != NULL) {
@@ -64,7 +66,7 @@ static LRESULT CALLBACK _BTN_PROC(
     }
   }
 
-  cic_widget* _BASE = cic_getRefByRawHandle(_HANDLE);
+  cic_widget* _BASE = cic_getWidgetByRawHandle(_HANDLE);
 
   if (_BASE != NULL) {
     cic_button* _this = (cic_button*)_BASE->_WIDGET_UPCAST_REF;
@@ -352,7 +354,7 @@ static LRESULT CALLBACK _BTN_PROC(
       }
     }
 
-    return CallWindowProcW(
+    return CallWindowProc(
       _BASE->_PREV_PROC,
       _HANDLE,
       _MESSAGE,
@@ -381,7 +383,7 @@ cic_button* cic_createButton(
       BUTTON->_BASE->_WIDGET_UPCAST_REF = BUTTON;
       BUTTON->_OWNER_DRAW = _OWNER_DRAW;
 
-      BUTTON->_BASE->_HANDLE = CreateWindowExW(
+      BUTTON->_BASE->_HANDLE = CreateWindowEx(
         0L,
         L"BUTTON",
         _TEXT,
@@ -575,7 +577,7 @@ bool cic_setButtonStyle(
   if (*_SELF != NULL) {
     cic_button* _BUTTON = *_SELF;
 
-    return SetWindowLongPtrW(
+    return SetWindowLongPtr(
       cic_getButtonHandle(_BUTTON),
       GWL_STYLE,
       (LONG_PTR)WS_VISIBLE | WS_TABSTOP | WS_CHILD | ((_BUTTON->_OWNER_DRAW == true) ? BS_OWNERDRAW : 0) | _STYLE
@@ -610,7 +612,7 @@ cic_point cic_getButtonPosition(cic_button* _SELF) {
   if (_SELF != NULL)
     return cic_getWidgetPosition(*cic_getButtonWidgetRef(_SELF));
 
-  return (cic_point) { .X = -1, .X = -1 };
+  return (cic_point) { .X = -1, .Y = -1 };
 }
 signed int cic_getButtonX(cic_button* _SELF) {
   if (_SELF != NULL)
@@ -629,7 +631,7 @@ cic_point cic_getButtonCenter(cic_button* _SELF) {
   if (_SELF != NULL)
     return cic_getWidgetCenter(*cic_getButtonWidgetRef(_SELF));
 
-  return (cic_point) { .X = -1, .X = -1 };
+  return (cic_point) { .X = -1, .Y = -1 };
 }
 signed int cic_getButtonCenterX(cic_button* _SELF) {
   if (_SELF != NULL)

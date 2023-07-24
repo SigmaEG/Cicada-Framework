@@ -90,9 +90,9 @@ extern "C" {
   signed int cic_getWindowCenterY(cic_window* _SELF);
 
   bool cic_isWindowFullscreenMode(cic_window* _SELF);
-  bool cic_isWindowMaximized(cic_window** _SELF);
-  bool cic_isWindowMinimized(cic_window** _SELF);
-  bool cic_isWindowIconized(cic_window** _SELF);
+  bool cic_isWindowMaximized(cic_window* _SELF);
+  bool cic_isWindowMinimized(cic_window* _SELF);
+  bool cic_isWindowIconized(cic_window* _SELF);
 
   void cic_exitWindow(cic_window** _SELF);
 

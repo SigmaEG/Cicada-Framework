@@ -1,5 +1,6 @@
 #include "include/cic_globals.h"
 #include "include/cic_window.h"
+#include "include/cic_leak_detector.h"
 
 typedef struct _WIDGET_BASE_PTR_LIST {
   cic_widget** LIST;
@@ -82,7 +83,7 @@ bool cic_removeRawHandleRef(cic_widget** _WIDGET_REF) {
 
   return false;
 }
-cic_widget* cic_getRefByRawHandle(HWND _HANDLE) {
+cic_widget* cic_getWidgetByRawHandle(HWND _HANDLE) {
   if (APP_HWND_LIST.ELEMENTS == 0)
     return NULL;
 
@@ -100,7 +101,7 @@ cic_widget* cic_getRefByRawHandle(HWND _HANDLE) {
 
   return WIDGET_REF;
 }
-cic_widget* cic_getRefById(const wchar_t* _ID) {
+cic_widget* cic_getWidgetById(const wchar_t* _ID) {
   if (APP_HWND_LIST.ELEMENTS == 0)
     return NULL;
 
@@ -140,6 +141,8 @@ bool cic_createEventHandler(
           if (_WIDGET->_EVENTS != NULL) {
             _WIDGET->_nEVENTS = 1;
             _WIDGET->_EVENTS[0] = _EST;
+
+            return true;
           }
           else
             return false;
@@ -152,6 +155,8 @@ bool cic_createEventHandler(
             if (_REALLOC_TEMP != NULL) {
               _WIDGET->_EVENTS = _REALLOC_TEMP;
               _WIDGET->_EVENTS[_WIDGET->_nEVENTS - 1] = _EST;
+
+              return true;
             }
             else
               return false;
@@ -160,20 +165,23 @@ bool cic_createEventHandler(
             size_t _FDX = -1;
 
             for (size_t IDX = 0; IDX < _WIDGET->_nEVENTS; ++IDX) {
-              if (_WIDGET->_EVENTS[IDX] != NULL) {
-                if (_WIDGET->_EVENTS[IDX]->_EVENT_TYPE == _EVENT) {
-                  _FDX = IDX;
+              if (_WIDGET->_EVENTS != NULL) {
+                if (_WIDGET->_EVENTS[IDX] != NULL) {
+                  if (_WIDGET->_EVENTS[IDX]->_EVENT_TYPE == _EVENT) {
+                    _FDX = IDX;
 
-                  break;
+                    break;
+                  }
                 }
               }
             }
 
-            _WIDGET->_EVENTS[_FDX] = _EST;
+            if (_WIDGET->_EVENTS != NULL)
+              _WIDGET->_EVENTS[_FDX] = _EST;
+
+            return true;
           }
         }
-
-        return true;
       }
     }
   }
@@ -281,7 +289,10 @@ cic_region* cic_createPolygonRegion(
   return REGION;
 }
 
-void cic_setRegion(cic_region** _REGION, HRGN _HRGN) {
+void cic_setRegion(
+  cic_region** _REGION,
+  HRGN _HRGN
+) {
   if (*_REGION != NULL) {
     cic_region* REGION = *_REGION;
 
@@ -309,7 +320,11 @@ HRGN cic_getHRGNClone(cic_region* _REGION) {
 
   return 0;
 }
-bool cic_combineRegion(HRGN _DEST_REGION, HRGN _SRC_REGION, cic_rCombineMode _COMBINE_MODE) {
+bool cic_combineRegion(
+  HRGN _DEST_REGION, 
+  HRGN _SRC_REGION,
+  cic_rCombineMode _COMBINE_MODE
+) {
   if (_COMBINE_MODE != CMODE_COPY)
     return CombineRgn(_DEST_REGION, _DEST_REGION, _SRC_REGION, (signed int)_COMBINE_MODE) >= 2;
   else
@@ -332,6 +347,33 @@ bool cic_destroyRegion(cic_region** _REGION) {
   }
 
   return true;
+}
+
+cic_font cic_createFont(
+  const wchar_t* _FONT_NAME,
+  unsigned int _FONT_SZ,
+  signed int _FONT_ANGLE,
+  cic_fontWeight _FONT_WEIGHT,
+  cic_charSet _FONT_CHARSET,
+  cic_fontQuality _FONT_QUALITY,
+  bool _IS_ITALIC,
+  bool _IS_UNDERLINED,
+  bool _HAS_STRIKEOUT
+) {
+  cic_font _FONT = {
+    .FONT_SIZE = _FONT_SZ,
+    .ANGLE = _FONT_ANGLE,
+    .WEIGHT = _FONT_WEIGHT,
+    .CHARSET = _FONT_CHARSET,
+    .QUALITY = _FONT_QUALITY,
+    .IS_ITALIC = _IS_ITALIC,
+    .IS_UNDERLINED = _IS_UNDERLINED,
+    .HAS_STRIKEOUT = _HAS_STRIKEOUT
+  };
+
+  cic_lpcwstrToLPWSTR(&_FONT.FONT_NAME, _FONT_NAME);
+
+  return _FONT;
 }
 
 cic_size cic_rectToSize(RECT _RECT) {
@@ -361,9 +403,9 @@ bool cic_lpcwstrToLPWSTR(
     free(*_DEST);
 
   size_t LEN_SOURCE = (wcslen(_SOURCE) + 1);
-  *_DEST = (LPWSTR)calloc(LEN_SOURCE, sizeof(WCHAR));
+  *_DEST = (wchar_t*)calloc(LEN_SOURCE, sizeof(wchar_t));
 
-  if (*_DEST != 0) {
+  if (*_DEST != NULL) {
     wcscpy(*_DEST, _SOURCE);
 
     if ((wcslen(*_DEST) + 1) == LEN_SOURCE)
@@ -385,7 +427,7 @@ bool cic_setClipboard(const wchar_t* _SOURCE) {
 
       HGLOBAL _CLIP_INFO = GlobalAlloc(GMEM_MOVEABLE, DATA_SZ * sizeof(WCHAR));
       if (_CLIP_INFO != NULL) {
-        LPWSTR _CLIP_DATA = (LPWSTR)GlobalLock(_CLIP_INFO);
+        wchar_t* _CLIP_DATA = (wchar_t*)GlobalLock(_CLIP_INFO);
         if (_CLIP_DATA != NULL) {
           wcscpy(_CLIP_DATA, _SOURCE);
 
@@ -414,12 +456,11 @@ bool cic_getClipboard(wchar_t** _DEST) {
     HANDLE _CLIP_DATA = GetClipboardData(CF_UNICODETEXT);
 
     if (_CLIP_DATA != NULL) {
-      LPWSTR _CLIP_GET = (LPWSTR)GlobalLock(_CLIP_DATA);
+      wchar_t* _CLIP_GET = (wchar_t*)GlobalLock(_CLIP_DATA);
 
       if (_CLIP_GET != NULL) {
         size_t DATA_SZ = (wcslen(_CLIP_GET) + 1);
-
-        *_DEST = (LPWSTR)calloc(DATA_SZ, sizeof(WCHAR));
+        *_DEST = (wchar_t*)calloc(DATA_SZ, sizeof(wchar_t));
 
         wcscpy(*_DEST, _CLIP_GET);
 
@@ -451,7 +492,7 @@ bool cic_isKeyDown(
   return false;
 }
 
-LPCWSTR cic_widgetTypeToLPCWSTR(cic_widgetType _TYPE) {
+const wchar_t* cic_widgetTypeToLPCWSTR(cic_widgetType _TYPE) {
   return (
     _TYPE == WTYPE_STATIC ? L"STATIC" :
     _TYPE == WTYPE_BUTTON ? L"BUTTON" :
@@ -677,7 +718,10 @@ cic_point cic_getScreenCenterByIdx(
   return (cic_point) { .X = -1, .Y = -1 };
 }
 
-cic_point cic_calcCenterPoint(cic_point _CENTER_POINT, cic_size _SIZE_OF_SRC) {
+cic_point cic_calcCenterPoint(
+  cic_point _CENTER_POINT,
+  cic_size _SIZE_OF_SRC
+) {
   cic_point _CENTER = {
     .X = _CENTER_POINT.X - (_SIZE_OF_SRC.WIDTH / 2),
     .Y = _CENTER_POINT.Y - (_SIZE_OF_SRC.HEIGHT / 2)
@@ -686,7 +730,8 @@ cic_point cic_calcCenterPoint(cic_point _CENTER_POINT, cic_size _SIZE_OF_SRC) {
   return _CENTER;
 }
 
-
 bool cic_exit(signed int _EXIT_CODE) {
   PostQuitMessage(0);
+
+  return _EXIT_CODE;
 }

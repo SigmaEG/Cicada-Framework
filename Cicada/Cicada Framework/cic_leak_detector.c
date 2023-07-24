@@ -69,7 +69,7 @@ void CLEAR()
   }
 }
 
-void* CIC_MALLOC(unsigned int _SZ, const char* _FL, unsigned int _LN) {
+void* CIC_MALLOC(size_t _SZ, const char* _FL, unsigned int _LN) {
   void* _PTR = malloc(_SZ);
 
   if (_PTR != NULL) {
@@ -79,8 +79,8 @@ void* CIC_MALLOC(unsigned int _SZ, const char* _FL, unsigned int _LN) {
   return _PTR;
 }
 
-void* CIC_CALLOC(unsigned int _nELEMENTS, unsigned int _SZ, const char* _FL, unsigned int _LN) {
-  unsigned TOT_SZ;
+void* CIC_CALLOC(size_t _nELEMENTS, size_t _SZ, const char* _FL, unsigned int _LN) {
+  size_t TOT_SZ;
   void* _PTR = calloc(_nELEMENTS, _SZ);
 
   if (_PTR != NULL) {
@@ -96,7 +96,7 @@ void CIC_FREE(void* MEM_REF) {
   free(MEM_REF);
 }
 
-void ADD_MEM_INFO(void* _MEM_REF, unsigned int _SZ, const char* _FL, unsigned int _LN) {
+void ADD_MEM_INFO(void* _MEM_REF, size_t _SZ, const char* _FL, unsigned int _LN) {
   MEM_INFO _MEM_ALLOC_INFO;
 
   memset(&_MEM_ALLOC_INFO, 0, sizeof(_MEM_ALLOC_INFO));
@@ -127,16 +127,16 @@ void REP_MEM_LEAK(void) {
   char _INFO[1024];
 
   if (_FP != NULL) {
-    if (_PTR_BEG != NULL) {
-      sprintf(_INFO, "%s\n", "CIC Memory Leak Summary");
-      fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
-      sprintf(_INFO, "%s\n", "[-----------------------------------]");
-      fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
+    sprintf(_INFO, "%s\n", "CIC Memory Leak Summary");
+    fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
+    sprintf(_INFO, "%s\n", "[-----------------------------------]");
+    fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
 
+    if (_PTR_BEG != NULL) {
       for (_LEAK_INFO = _PTR_BEG; _LEAK_INFO != NULL; _LEAK_INFO = _LEAK_INFO->_NEXT) {
         sprintf(_INFO, "address : %p\n", _LEAK_INFO->_MEM_INFO._ADDR);
         fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
-        sprintf(_INFO, "size    : %d bytes\n", _LEAK_INFO->_MEM_INFO._SZ);
+        sprintf(_INFO, "size    : %zu bytes\n", _LEAK_INFO->_MEM_INFO._SZ);
         fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
         sprintf(_INFO, "file    : %s\n", _LEAK_INFO->_MEM_INFO._FNAME);
         fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
@@ -145,6 +145,10 @@ void REP_MEM_LEAK(void) {
         sprintf(_INFO, "%s\n", "[-----------------------------------]");
         fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
       }
+    }
+    else {
+      sprintf(_INFO, "NO MEMORY LEAKS FOUND\n");
+      fwrite(_INFO, (strlen(_INFO) + 1), 1, _FP);
     }
   }
 
