@@ -3,23 +3,50 @@
 #include <cic_widget.h>
 #include <cic_group.h>
 #include <cic_leak_detector.h>
+#include "resource.h"
 
 void _EXIT_CALLBACK(cic_widget** _SELF) {
   cic_exit(0);
 }
+void _FSCRN_CALLBACK(cic_widget** _SELF) {
+  if (*_SELF != NULL) {
+    cic_widget* _TOP_WINDOW = *_SELF;
 
-void _MAX_CALLBACK(cic_widget** _SELF) {
-  cic_widget* _TOP_WINDOW = cic_getWidgetParent(*_SELF);
-
-  if (_TOP_WINDOW != NULL)
-    cic_maximizeWindow(&((cic_window*)_TOP_WINDOW->_WIDGET_UPCAST_REF));
+    if (_TOP_WINDOW != NULL) {
+      if ((cic_isKeyDown(VK_MENU, false) && cic_isKeyDown(VK_RETURN, false)) || cic_isKeyDown(VK_F11, false))
+        cic_windowFullscreenMode(&cic_upcastWidgetRef(_TOP_WINDOW, cic_window*));
+      else if (cic_isKeyDown(VK_ESCAPE, false))
+        cic_restoreWindow(&cic_upcastWidgetRef(_TOP_WINDOW, cic_window*));
+    }
+  }
 }
+void _MAX_CALLBACK(cic_widget** _SELF) {
+  if (*_SELF != NULL) {
+    cic_widget* _TOP_WINDOW = cic_getWidgetParent(*_SELF);
 
+    if (_TOP_WINDOW != NULL)
+      cic_maximizeWindow(&cic_upcastWidgetRef(_TOP_WINDOW, cic_window*));
+  }
+}
 void _MIN_CALLBACK(cic_widget** _SELF) {
-  cic_widget* _TOP_WINDOW = cic_getWidgetParent(*_SELF);
+  if (*_SELF != NULL) {
+    cic_widget* _TOP_WINDOW = cic_getWidgetParent(*_SELF);
 
-  if (_TOP_WINDOW != NULL)
-    cic_minimizeWindow(&((cic_window*)_TOP_WINDOW->_WIDGET_UPCAST_REF));
+    if (_TOP_WINDOW != NULL)
+      cic_minimizeWindow(&cic_upcastWidgetRef(_TOP_WINDOW, cic_window*));
+  }
+}
+void _SIZE_CALLBACK(cic_widget** _SELF) {
+  if (*_SELF != NULL) {
+    if (cic_isWindowMaximized(cic_upcastWidgetRef((*_SELF), cic_window*))) {
+      cic_widget* _MAX_BTN_WIDGET = cic_getWidgetById(L"MAX_BUTTON");
+      cic_setWidgetLabel(&_MAX_BTN_WIDGET, L"2");
+    }
+    else {
+      cic_widget* _MAX_BTN_WIDGET = cic_getWidgetById(L"MAX_BUTTON");
+      cic_setWidgetLabel(&_MAX_BTN_WIDGET, L"1");
+    }
+  }
 }
 
 signed int main(signed int argc, char* argv[]) {
@@ -29,7 +56,7 @@ signed int main(signed int argc, char* argv[]) {
 
   cic_size _SIZE = { .WIDTH = 800, .HEIGHT = 600 };
   cic_point _POINT = cic_calcCenterPoint(
-    cic_getScreenCenterByIdx(1, true),
+    cic_getScreenCenterByIdx(0, true),
     _SIZE
   );
   cic_point _PTS[] = {
@@ -55,12 +82,18 @@ signed int main(signed int argc, char* argv[]) {
   cic_combineRegion(cic_getHRGN(_ROUND_RGN), cic_getHRGN(_REGION), CMODE_INTERSECTION);
 
   cic_window* WINDOW = cic_createWindow(
-    L"TEST",
+    L"Cicada Framework - Init Window",
     L"cicwin",
     _POINT,
     _SIZE
   );
   if (WINDOW != NULL) {
+    HINSTANCE _HINSTANCE = (HINSTANCE)GetWindowLongPtr(cic_getWindowHandle(WINDOW), GWLP_HINSTANCE);
+    HICON ICON = LoadIcon(_HINSTANCE, MAKEINTRESOURCE(IDI_ICON1));
+
+    PostMessage(cic_getWindowHandle(WINDOW), WM_SETICON, ICON_BIG, (LPARAM)ICON);
+    PostMessage(cic_getWindowHandle(WINDOW), WM_SETICON, ICON_SMALL, (LPARAM)ICON);
+
     cic_setWidgetBackgroundColor(
       cic_getWindowWidgetRef(WINDOW),
       (cic_color) {
@@ -72,14 +105,32 @@ signed int main(signed int argc, char* argv[]) {
 
     cic_setWindowTitle(
       &WINDOW,
-      L"REWRITE"
+      L"Cicada Framework"
     );
     cic_setWidgetShape(
       cic_getWindowWidgetRef(WINDOW),
       _ROUND_RGN
     );
 
-    cic_region* BUTTON_RND_RGN = cic_createRoundRectRegion(
+    cic_createEventHandler(
+      cic_getWindowWidgetRef(WINDOW),
+      EVENT_MAXIMIZED,
+      &_SIZE_CALLBACK
+    );
+    cic_createEventHandler(
+      cic_getWindowWidgetRef(WINDOW),
+      EVENT_RESTORE_FROM_MAXIMIZED,
+      &_SIZE_CALLBACK
+    );
+    cic_createEventHandler(
+      cic_getWindowWidgetRef(WINDOW),
+      EVENT_KEYDOWN,
+      &_FSCRN_CALLBACK
+    );
+
+    /* TOP BUTTONS HANDLER */
+
+    cic_region* TOP_BUTTON_RND_RGN = cic_createRoundRectRegion(
       (cic_point) {
         .X = 0,
         .Y = 0
@@ -90,11 +141,20 @@ signed int main(signed int argc, char* argv[]) {
       },
       12
     );
+    cic_font TOP_BUTTON_FONT = cic_createFont(
+      L"Marlett",
+      13,
+      0,
+      WEIGHT_DEFAULT,
+      CHARSET_SYMBOL,
+      QUALITY_DEFAULT,
+      false, false, false
+    );
 
     cic_button* EXIT_BUTTON = cic_createButton(
       *cic_getWindowWidgetRef(WINDOW),
-      L"X",
-      L"cicbtn",
+      L"r",
+      L"EXIT_BUTTON",
       (cic_point) {
         cic_getWindowW(WINDOW) - 28,
         3
@@ -125,7 +185,11 @@ signed int main(signed int argc, char* argv[]) {
       );
       cic_setWidgetShape(
         cic_getButtonWidgetRef(EXIT_BUTTON),
-        BUTTON_RND_RGN
+        TOP_BUTTON_RND_RGN
+      );
+      cic_setWidgetLabelFont(
+        cic_getButtonWidgetRef(EXIT_BUTTON), 
+        TOP_BUTTON_FONT
       );
 
       cic_createEventHandler(
@@ -139,8 +203,8 @@ signed int main(signed int argc, char* argv[]) {
 
     cic_button* MAX_BUTTON = cic_createButton(
       *cic_getWindowWidgetRef(WINDOW),
-      L"□",
-      L"cicbtn",
+      L"1",
+      L"MAX_BUTTON",
       (cic_point) {
         cic_getButtonX(EXIT_BUTTON) - 27,
         3
@@ -171,7 +235,11 @@ signed int main(signed int argc, char* argv[]) {
       );
       cic_setWidgetShape(
         cic_getButtonWidgetRef(MAX_BUTTON),
-        BUTTON_RND_RGN
+        TOP_BUTTON_RND_RGN
+      );
+      cic_setWidgetLabelFont(
+        cic_getButtonWidgetRef(MAX_BUTTON),
+        TOP_BUTTON_FONT
       );
 
       cic_createEventHandler(
@@ -186,15 +254,15 @@ signed int main(signed int argc, char* argv[]) {
     cic_button* MIN_BUTTON = cic_createButton(
       *cic_getWindowWidgetRef(WINDOW),
       L"-",
-      L"cicbtn",
+      L"MIN_BUTTON",
       (cic_point) {
-      cic_getButtonX(MAX_BUTTON) - 27,
+        cic_getButtonX(MAX_BUTTON) - 27,
         3
-    },
+      },
       (cic_size) {
-      .WIDTH = 25,
+        .WIDTH = 25,
         .HEIGHT = 25
-    },
+      },
       true
     );
 
@@ -217,7 +285,7 @@ signed int main(signed int argc, char* argv[]) {
       );
       cic_setWidgetShape(
         cic_getButtonWidgetRef(MIN_BUTTON),
-        BUTTON_RND_RGN
+        TOP_BUTTON_RND_RGN
       );
 
       cic_createEventHandler(
@@ -229,11 +297,11 @@ signed int main(signed int argc, char* argv[]) {
     else
       printf("MIN_BUTTON NULL\n");
 
-    cic_widget** _WIDGET_REF = cic_getWindowWidgetRef(WINDOW);
+    /* TOP BUTTONS HANDLER */
 
     _RET = cic_startWindowMessageLoop(&WINDOW);
 
-    cic_destroyRegion(&BUTTON_RND_RGN);
+    cic_destroyRegion(&TOP_BUTTON_RND_RGN);
   } else
     printf("WINDOW NULL\n");
 
